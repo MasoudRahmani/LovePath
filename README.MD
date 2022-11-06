@@ -2,8 +2,7 @@ What is the Idea?
 ------------
 Main point of this project is to clear **all permission of a folder** and give it to **one** person only so no one else can open it *not even the administrator*.
 
-![Only one user Permission](https://imgur.com/a/5pZRESF)
-
+![Only one user Permission](https://i.imgur.com/duG5djv.jpeg)
 Therefore if another user wants to open it, need to use user password.
 
 When you could use Bit-locker or other locking password why this?
@@ -24,7 +23,6 @@ When you could use Bit-locker or other locking password why this?
 Program
 -------------
 
-
 **Easiest way to invoke to open that Folder is:** in a bat or cmd (not obscure enough)
 
     runas /user:Hidden "XYplorerPortable.exe e:\Temp\"
@@ -33,6 +31,8 @@ But i wanted to hide it even further so i made an app which would deceive a user
 
 This repository
 --------------
+https://github.com/MasoudRahmani/LovePath/raw/master/usage.mp4
+
 Right now main problem is how to use any explorer(for convenience) to open folder.
 windows explorer in many scenarios because of user permission returns a error therefore for now i am using third-party explorer.
 
