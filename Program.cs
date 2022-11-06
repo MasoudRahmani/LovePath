@@ -1,19 +1,42 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Security;
-using System.Reflection;
 using System.IO;
+using System.Drawing;
+using System.Windows.Forms;
+using System.Runtime.InteropServices;
 
 namespace LovePath
 {
     class Program
     {
+        public static class ConsoleUtils
+        {
+
+            public static void CenterConsole()
+            {
+                IntPtr hWin = GetConsoleWindow();
+                RECT rc;
+                GetWindowRect(hWin, out rc);
+                Screen scr = Screen.FromPoint(new Point(rc.left, rc.top));
+                int x = scr.WorkingArea.Left + (scr.WorkingArea.Width - (rc.right - rc.left)) / 2;
+                int y = scr.WorkingArea.Top + (scr.WorkingArea.Height - (rc.bottom - rc.top)) / 2;
+                MoveWindow(hWin, x, y, rc.right - rc.left, rc.bottom - rc.top, false);
+            }
+
+            // P/Invoke declarations
+            private struct RECT { public int left, top, right, bottom; }
+            [DllImport("kernel32.dll", SetLastError = true)]
+            private static extern IntPtr GetConsoleWindow();
+            [DllImport("user32.dll", SetLastError = true)]
+            private static extern bool GetWindowRect(IntPtr hWnd, out RECT rc);
+            [DllImport("user32.dll", SetLastError = true)]
+            private static extern bool MoveWindow(IntPtr hWnd, int x, int y, int w, int h, bool repaint);
+        }
         static void Main(string[] args)
         {
+            ConsoleUtils.CenterConsole();
             string user = "Hidden";
             string pass;
 
@@ -27,7 +50,9 @@ namespace LovePath
 
             Console.BackgroundColor = ConsoleColor.Red;
             Console.SetWindowSize(70, 10);
+            Console.SetBufferSize(70, 10);//no scrollbar
             Console.Title = "LovePath";
+
             Console.Clear();
 
             while (true)
