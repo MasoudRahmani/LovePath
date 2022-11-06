@@ -2,6 +2,8 @@ What is the Idea?
 ------------
 Main point of this project is to clear **all permission of a folder** and give it to **one** person only so no one else can open it *not even the administrator*.
 
+![Only one user Permission](https://imgur.com/a/5pZRESF)
+
 Therefore if another user wants to open it, need to use user password.
 
 When you could use Bit-locker or other locking password why this?
