@@ -84,4 +84,8 @@
   <PropertyGroup>
     <PostBuildEvent>xcopy /Y /E "$(ProjectDir)\XY\" $(TargetDir)</PostBuildEvent>
   </PropertyGroup>
+  <PropertyGroup>
+    <PreBuildEvent>del /F /Q /S "$(TargetDir)*"
+rmdir /Q /S "$(TargetDir)Data"</PreBuildEvent>
+  </PropertyGroup>
 </Project>
