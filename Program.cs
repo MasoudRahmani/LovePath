@@ -16,6 +16,7 @@ namespace LovePath
         {
             string user = "Hidden";
             string pass;
+
             string explorer = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "XYplorerPortable.exe");
             //string explorer = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Explorer++.exe");
             //string explorer = @"C:\Windows\explorer.exe";
@@ -50,7 +51,7 @@ namespace LovePath
                         {
                             securePass.AppendChar(item);
                         }
-                        pass = "";
+
                         using (Process cmd = new Process())
                         {
                             try
