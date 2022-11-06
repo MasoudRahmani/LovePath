@@ -16,11 +16,19 @@ namespace LovePath
         {
             string user = "Hidden";
             string pass;
+            string explorer = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "XYplorerPortable.exe");
+            //string explorer = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Explorer++.exe");
+            //string explorer = @"C:\Windows\explorer.exe";
+            string love = @"E:\Temp\MISC\personal\Death Note 01.jpg\";
             var securePass = new SecureString();
-            Console.SetWindowSize(53, 8);
-            Console.Title = "LovePath";
+
+            if (!File.Exists(explorer)) Console.WriteLine("Explorer Not found!");
 
             Console.BackgroundColor = ConsoleColor.Red;
+            Console.SetWindowSize(70, 10);
+            Console.Title = "LovePath";
+            Console.Clear();
+
             while (true)
             {
                 var pressedkey = Console.ReadKey();
@@ -37,11 +45,12 @@ namespace LovePath
                         Console.Clear();
                         Console.Write("Password: ");
                         pass = GetInputPassword();//GetHiddenConsoleInput();
+                        securePass.Clear();
                         foreach (var item in pass)
                         {
                             securePass.AppendChar(item);
                         }
-
+                        pass = "";
                         using (Process cmd = new Process())
                         {
                             try
@@ -49,12 +58,11 @@ namespace LovePath
                                 //var xplorePath = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, @"XYplorerPortable.exe");
                                 ProcessStartInfo startInfo = new ProcessStartInfo
                                 {
-                                    FileName = "cmd.exe",
-                                    //Verb="runas", //makes his run as admin
+                                    FileName = explorer,
+                                    //Verb = "runas", //makes his run as admin if user and pass not there
                                     WindowStyle = ProcessWindowStyle.Hidden,
                                     CreateNoWindow = true,
-                                    Arguments = "/c" + @"XYplorerPortable.exe",
-                                    WorkingDirectory = System.AppDomain.CurrentDomain.BaseDirectory,
+                                    Arguments = love,
                                     //RedirectStandardInput = true,
                                     //RedirectStandardOutput = true,
                                     UseShellExecute = false,
@@ -66,15 +74,15 @@ namespace LovePath
                             }
                             catch (Exception w)
                             {
-                                Console.WriteLine(w.Message);
+                                if (w.Message.Contains("The directory name is invalid"))
+                                { Console.WriteLine("Hidden User doesnt have access to explorer application.\n change application installation folder to some place accessible"); }
+                                else
+                                {
+                                    Console.WriteLine(w.Message);
+                                }
                             }
-
-                            //cmd.StandardInput.WriteLine(notepad);
-                            //cmd.StandardInput.Flush();
-                            //cmd.StandardInput.Close();
-                            //cmd.WaitForExit();
-                            //Console.WriteLine(cmd.StandardOutput.ReadToEnd());
                         }
+
                     }
                     else { Console.Clear(); Console.WriteLine(" ---2--- Press Z to exit..."); }
                 }
