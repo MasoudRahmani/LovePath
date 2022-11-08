@@ -3,74 +3,30 @@ using System.Text;
 using System.Diagnostics;
 using System.Security;
 using System.IO;
-using System.Drawing;
-using System.Windows.Forms;
-using System.Runtime.InteropServices;
+using LovePath.Util;
 
 namespace LovePath
 {
     class Program
     {
-        /// <summary>
-        /// center console class
-        /// </summary>
-        public static class ConsoleUtils
-        {
-
-            public static void CenterConsole()
-            {
-                IntPtr hWin = GetConsoleWindow();
-                RECT rc;
-                GetWindowRect(hWin, out rc);
-                Screen scr = Screen.FromPoint(new Point(rc.left, rc.top));
-                int x = scr.WorkingArea.Left + (scr.WorkingArea.Width - (rc.right - rc.left)) / 2;
-                int y = scr.WorkingArea.Top + (scr.WorkingArea.Height - (rc.bottom - rc.top)) / 2;
-                MoveWindow(hWin, x, y, rc.right - rc.left, rc.bottom - rc.top, false);
-            }
-            public static void MinizeConsole()
-            {
-                IntPtr handle = Process.GetCurrentProcess().MainWindowHandle;
-
-                ShowWindow(handle, 6);
-            }
-
-            // P/Invoke declarations
-            private struct RECT { public int left, top, right, bottom; }
-            [DllImport("kernel32.dll", SetLastError = true)]
-            private static extern IntPtr GetConsoleWindow();
-            [DllImport("user32.dll", SetLastError = true)]
-            private static extern bool GetWindowRect(IntPtr hWnd, out RECT rc);
-            [DllImport("user32.dll", SetLastError = true)]
-            private static extern bool MoveWindow(IntPtr hWnd, int x, int y, int w, int h, bool repaint);
-
-            /// <summary>
-            /// Minimize Console
-            /// </summary>
-            [DllImport("User32.dll", CallingConvention = CallingConvention.StdCall, SetLastError = true)]
-            [return: MarshalAs(UnmanagedType.Bool)]
-            private static extern bool ShowWindow([In] IntPtr hWnd, [In] int nCmdShow);
-        }
-
-
-
-
         static void Main(string[] args)
         {
-            ConsoleUtils.CenterConsole();
-            string user = "Hidden";
-            string pass;
-            var securePass = new SecureString();
-
-
-            string explorer = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "XYplorerPortable.exe");
-            //string explorer = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Explorer++.exe");
-            //string explorer = @"C:\Windows\explorer.exe";
-            string love = @"E:\Temp\MISC\personal\Death Note 01.jpg\";
-
-
-            if (!File.Exists(explorer)) Console.WriteLine("Explorer Not found!");
+            var cnf = new Config();
+            string configFilePath = Path.Combine(cnf.ProgramPath, cnf.ConfigFileName);
+            if (!File.Exists(configFilePath))
+            {
+                var json = MySerialization.Serialize<Config>(cnf);
+                using (var sw = new StreamWriter(configFilePath, false, Encoding.UTF8))
+                    sw.WriteLine(json);
+            }
 
             SetConsoleSettings();
+
+            string user = cnf.User;
+            string explorer = Path.Combine(cnf.ProgramPath, cnf.XplorerName);
+            string love = cnf.LovePath;
+
+            if (!File.Exists(explorer)) Console.WriteLine("Explorer Not found!");
 
             while (true)
             {
@@ -85,8 +41,8 @@ namespace LovePath
                     if (pressedkey.Key == ConsoleKey.Escape)
                     {
                         Console.Clear();
-                        RunasProcess_Shell(explorer, love, user);
-                        ConsoleUtils.MinizeConsole();
+                        var result = RunasProcess_Shell(explorer, love, user);
+                        if (result) ConsoleUtils.MinizeConsole();
                     }
                     else ShowExit();
                 }
@@ -96,19 +52,17 @@ namespace LovePath
 
         private static void SetConsoleSettings()
         {
+            ConsoleUtils.CenterConsole();
+
+            Console.Title = "LovePath";
             Console.BackgroundColor = ConsoleColor.Red;
             Console.SetWindowSize(70, 10);
             Console.SetBufferSize(70, 10);//no scrollbar
-            Console.Title = "LovePath";
+
             Console.Clear();
         }
 
-        private static void ShowExit()
-        {
-            Console.Clear();
-            Console.WriteLine("  Press Z to exit...");
-        }
-        private static void RunasProcess_Shell(string explorer, string arg, string user)
+        private static bool RunasProcess_Shell(string explorer, string arg, string user)
         {
             using (Process cmd = new Process())
             {
@@ -131,6 +85,8 @@ namespace LovePath
                     cmd.Start();
 
                     cmd.WaitForExit();
+
+                    return true;
                 }
                 catch (Exception w)
                 {
@@ -140,11 +96,19 @@ namespace LovePath
                     {
                         Console.WriteLine(w.Message);
                     }
+                    return false;
                 }
             }
         }
 
+        private static void ShowExit()
+        {
+            Console.Clear();
+            Console.WriteLine("  Press Z to exit...");
+        }
         /* ----------------  depricated --------------------------  */
+        //string pass;
+        //var securePass = new SecureString();
         //Console.Write("Password: ");
         //pass = GetInputPassword();//GetHiddenConsoleInput();
         //securePass.Clear();
@@ -233,4 +197,6 @@ namespace LovePath
             return input.ToString();
         }
     }
+
+
 }
