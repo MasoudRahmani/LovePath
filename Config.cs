@@ -7,7 +7,7 @@ namespace LovePath
     public class Config
     {
         private string _user = "Hidden";
-        private string _xplorerName = "XYplorerPortable.exe";
+        private string _xplorerName = "XY.exe";
         private string _lovePath = @"E:\";
 
         [DataMember]
