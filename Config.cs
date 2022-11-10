@@ -13,7 +13,7 @@ namespace LovePath
         [DataMember]
         public string ProgramPath = AppDomain.CurrentDomain.BaseDirectory;
         [DataMember]
-        public string ConfigFileName = "lovepathconfig.sec";
+        public string ConfigFileName = "lovepathconfig.json";
         [DataMember]
         public string User
         {
