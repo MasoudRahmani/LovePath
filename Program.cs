@@ -133,6 +133,7 @@ namespace LovePath
             var pass = GetUserPass();
             using (Process cmd = new Process())
             {
+                
                 try
                 {
                     ProcessStartInfo startInfo = new ProcessStartInfo
@@ -140,7 +141,7 @@ namespace LovePath
                         FileName = filename,
                         //WindowStyle = ProcessWindowStyle.Hidden,
                         //CreateNoWindow = true,
-                        Arguments = arg,
+                        Arguments = $"\"{arg.Replace(@"\\", @"\")}\"",
                         RedirectStandardOutput = true,
                         //RedirectStandardError = true,
                         UseShellExecute = false,
