@@ -1,3 +1,5 @@
+
+
 What is the Idea?
 ------------
 Main point of this project is to clear **all permission of a folder** and give it to **one** person only so no one else can open it *not even the administrator*.
@@ -5,14 +7,17 @@ Main point of this project is to clear **all permission of a folder** and give i
 ![Only one user Permission](https://i.imgur.com/duG5djv.jpeg)
 Therefore if another user wants to open it, need to use user password.
 
+**Make sure** To encrypt folder so even **changing the owner** of folder has no effect
+
+![Encrypt Folder](https://i.imgur.com/UhGTANN.jpeg)
+
 When you could use Bit-locker or other locking password why this?
 
- 1. General idea is to not use any locking app and just use windows
-        feature. 
+ 1. General idea is to not use any locking app and just use windows features. 
 
-2. **Hide** something which is not obvious, they can't find a
+2. **Hide** something in a way that is not obvious so they can't find a
         application or *easy* to access **setting** which allows them to get an
-        idea of something is locked. 
+        idea that something is locked. 
 
 	They Have to get every folder permission to see if they have access or not. (not common to search like this,
         especially if they are in a hurry)
@@ -27,7 +32,10 @@ Program
 
     runas /user:Hidden "XYplorerPortable.exe e:\Temp\"
 
-But i wanted to hide it even further so i made an app which would deceive a user, right now it is just an idea but this way with **Obfuscation** they cant even guess what this app does, let alone ask for any guidance.
+    psexec -user Administrator -p Passwd "xcopy a.xml \\server_over_there\c$\A.xml"
+
+But i wanted to hide it even further so i made an app which would deceive a user, right now it is just an idea but this way
+        with **Obfuscation** they cant even guess what this app does, let alone ask for any guidance.
 
 This repository
 --------------
@@ -38,18 +46,13 @@ https://user-images.githubusercontent.com/54465233/200173146-8b116bec-5076-4b53-
 https://github.com/MasoudRahmani/LovePath/raw/master/usage_edit.mp4
 
 Right now main problem is how to use any explorer(for convenience) to open folder.
-windows explorer in many scenarios because of user permission returns a error therefore for now i am using third-party explorer.
+Windows explorer is limited and on some OS version is not possible therefore i am using third-party explorer (hopefully for now).
 
-Error:
+* **Explorer++** is a fast and simple application and great portability but might need some tweak. (problem with one drive)
+* **XYplorer** is very good but its portability is a problem. (need license)
 
-    The directory name is invalid
-
-* **Explorer++** is a fast and simple application and great portability but is buggy. (right click crash and ..)
-* **XYplorer** is very good but its portability is a problem.
-
-Note:
-**In order to use XYPlorer you need to place you licence in XY\APP\DefaultData\Data\XYplorer.ini.**
-Like This:
+***Note***
+**In order to use* XYPlorer you need to place you license in XY\APP\DefaultData\Data\XYplorer.ini.*
 
     [Register]
     ; THE FOLLOWING THREE LINES CONTAIN YOUR REGISTRATION INFORMATION. PLEASE KEEP THIS PART PRIVATE.
@@ -59,10 +62,25 @@ Like This:
 
 **Issue**
 ---------
+***Common Method Errors:***
+**Access:**
+Since running between users has permission conflict these error may happen.
+
 Application has to run somewhere where user can access third-party program. if you try to run program in `c:\` general it gives you below error.
 
-    The directory name is invalid.
-So run application somewhere else.
+ - RunasProcess_API
+
+> The directory name is invalid!
+
+ - RunasProcess_Shell
+
+> Access Denied!
+
+**Exception Handling:**
+Since it's a third party explorer getting feedback is tricky.
+With 
+**RunasProcess_API** you can make sure your app would run since otherwise `Process` would throw exception.
+**RunasProcess_Shell** since you need to read `console` output and runas command require user to input password, its harder (not implemented) (maybe user psexec )
 
 Hopes
 --------------
