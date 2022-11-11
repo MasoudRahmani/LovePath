@@ -46,7 +46,7 @@ Program
     psexec -user Administrator -p Passwd "xcopy a.xml \\server_over_there\c$\A.xml"
 
 But i wanted to hide it even further so i made an app which would deceive a user, right now it is just an idea but this way
-        with **Obfuscation** they cant even guess what this app does, let alone ask for any guidance.
+        with **Obfuscation** they can't even guess what this app does, let alone ask for any guidance.
 
 This repository
 --------------
@@ -57,6 +57,7 @@ https://user-images.githubusercontent.com/54465233/200173146-8b116bec-5076-4b53-
 https://github.com/MasoudRahmani/LovePath/raw/master/usage_edit.mp4
 
 Right now main problem is how to use any explorer(for convenience) to open folder.
+
 Windows explorer is limited and on some OS version is not possible therefore i am using third-party explorer (hopefully for now).
 
 * **Explorer++** is a fast and simple application and great portability but might need some tweak. (problem with one drive)
@@ -74,7 +75,9 @@ Windows explorer is limited and on some OS version is not possible therefore i a
 **Issue**
 ---------
 ***Common Method Errors:***
+
 **Access:**
+
 Since running between users has permission conflict these error may happen.
 
 Application has to run somewhere where user can access third-party program. if you try to run program in `c:\` general it gives you below error.
@@ -88,9 +91,12 @@ Application has to run somewhere where user can access third-party program. if y
 > Access Denied!
 
 **Exception Handling:**
+
 Since it's a third party explorer getting feedback is tricky.
 With 
+
 **RunasProcess_API** you can make sure your app would run since otherwise `Process` would throw exception.
+
 **RunasProcess_Shell** since you need to read `console` output and runas command require user to input password, its harder (not implemented) (maybe user psexec )
 
 Hopes
