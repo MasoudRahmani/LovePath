@@ -12,7 +12,8 @@ Therefore if another user wants to open it, need to use user password.
 
 ![Encrypt Folder](https://i.imgur.com/UhGTANN.jpeg)
 
-And it's better to not hide or make it a system file. `attrib +h +s`
+And it's better to not hide or make it a system file. Dont `attrib +h +s`!
+
 Hiding in plain sight works wonder, since they can't even find who owns this.
 
 ![Unknown Owner](https://i.imgur.com/RBxV2PB.png)
