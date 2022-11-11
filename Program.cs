@@ -74,7 +74,8 @@ namespace LovePath
                         Console.Clear();
                         //var result = await RunasProcess_Shell(explorer, love, user); //Dont know how to read consoloe output since process is also working on console (get password)
                         var result = RunasProcess_API(explorer, love, user);
-                        if (result) ConsoleUtils.MinizeConsole();
+                        //if (result) ConsoleUtils.MinizeConsole();
+                        if (result) break; //exit
                     }
                     else ShowExit();
                 }
@@ -153,7 +154,7 @@ namespace LovePath
                     cmd.StartInfo = startInfo;
                     cmd.Start();
 
-                    cmd.WaitForExit();
+                    //cmd.WaitForExit();
 
                     return true;
                 }
