@@ -1,5 +1,6 @@
 
 
+
 What is the Idea?
 ------------
 Main point of this project is to clear **all permission of a folder** and give it to **one** person only so no one else can open it *not even the administrator*.
@@ -11,6 +12,14 @@ Therefore if another user wants to open it, need to use user password.
 
 ![Encrypt Folder](https://i.imgur.com/UhGTANN.jpeg)
 
+And it's better to not hide or make it a system file. `attrib +h +s`
+Hiding in plain sight works wonder, since they can't even find who owns this.
+
+![Unknown Owner](https://i.imgur.com/RBxV2PB.png)
+**This way even `cipher /u /n /h` can not find encrypted file and folders.**
+
+Why?
+--------
 When you could use Bit-locker or other locking password why this?
 
  1. General idea is to not use any locking app and just use windows features. 
