@@ -5,6 +5,9 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization.Json;
+using System.Security;
+using System.Security.AccessControl;
+using System.Security.Principal;
 using System.Text;
 using System.Windows.Forms;
 
@@ -42,7 +45,7 @@ namespace LovePath.Util
             //    WriteIndented = true
             //};
             //return System.Text.Json.JsonSerializer.Serialize<T>(Obj, options); */
-            return FormatJson( Serialize_notFormatted<T>(Obj) );
+            return FormatJson(Serialize_notFormatted<T>(Obj));
         }
 
         public static T Deserialize<T>(string Json)
@@ -108,6 +111,139 @@ namespace LovePath.Util
         [DllImport("User32.dll", CallingConvention = CallingConvention.StdCall, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool ShowWindow([In] IntPtr hWnd, [In] int nCmdShow);
+    }
+
+    public static class Utils
+    {
+        /// <summary>
+        /// Remove all Permission of a file or folder and set only the given user
+        /// </summary>
+        /// <param name="filePath"> file or directory</param>
+        /// <param name="domainName">domain, if empty current domain</param>
+        /// <param name="userName">which user to have full control</param>
+        //https://stackoverflow.com/questions/18740860/remove-all-default-file-permissions
+        public static void Clear_SetFileSecurity(string filePath, string userName, string domainName = "")
+        {
+            if (String.IsNullOrWhiteSpace(domainName))
+            {
+                domainName = Environment.UserDomainName;
+            }
+
+            //get file info
+            FileInfo fi = new FileInfo(filePath);
+
+            //get security access
+            FileSecurity fs = fi.GetAccessControl();
+
+            //remove any inherited access
+            fs.SetAccessRuleProtection(true, false);
+
+            //get any special user access
+            AuthorizationRuleCollection rules = fs.GetAccessRules(true, true, typeof(System.Security.Principal.NTAccount));
+
+            //remove any special access
+            foreach (FileSystemAccessRule rule in rules)
+                fs.RemoveAccessRule(rule);
+
+            //add current user with full control.
+            fs.AddAccessRule(new FileSystemAccessRule(domainName + "\\" + userName, FileSystemRights.FullControl, AccessControlType.Allow));
+
+            //add all other users delete only permissions.
+            //fs.AddAccessRule(new FileSystemAccessRule("Authenticated Users", FileSystemRights.Delete, AccessControlType.Allow));
+
+            //flush security access.
+            File.SetAccessControl(filePath, fs);
+        }
+
+        public static void WriteFileSecurely(string path, string data, string user, bool encrypted = false)
+        {
+            using (FileStream fs = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, (encrypted) ? FileOptions.Encrypted : FileOptions.None))
+            {
+                var byt = Encoding.UTF8.GetBytes(data);
+                fs.Write(byt, 0, byt.Length);
+            }
+
+            Util.Utils.Clear_SetFileSecurity(path, user);
+        }
+
+
+        public static string GetHiddenConsoleInput()
+        {
+            Console.Write("Password: ");
+            StringBuilder input = new StringBuilder();
+            while (true)
+            {
+                var key = Console.ReadKey(true);
+                if (key.Key == ConsoleKey.Enter) break;
+                if (key.Key == ConsoleKey.Backspace && input.Length > 0) input.Remove(input.Length - 1, 1);
+                else if (key.Key != ConsoleKey.Backspace) input.Append(key.KeyChar);
+            }
+            return input.ToString();
+        }
+        public static string GetInputPassword()
+        {
+            Console.Write("Password: ");
+            StringBuilder input = new StringBuilder();
+            while (true)
+            {
+                int x = Console.CursorLeft;
+                int y = Console.CursorTop;
+                ConsoleKeyInfo key = Console.ReadKey(true);
+                if (key.Key == ConsoleKey.Enter)
+                {
+                    Console.WriteLine();
+                    break;
+                }
+                if (key.Key == ConsoleKey.Backspace && input.Length > 0)
+                {
+                    input.Remove(input.Length - 1, 1);
+                    Console.SetCursorPosition(x - 1, y);
+                    Console.Write(" ");
+                    Console.SetCursorPosition(x - 1, y);
+                }
+                else if (key.KeyChar < 32 || key.KeyChar > 126)
+                {
+                    Trace.WriteLine("Output suppressed: no key char"); //catch non-printable chars, e.g F1, CursorUp and so ...
+                }
+                else if (key.Key != ConsoleKey.Backspace)
+                {
+                    input.Append(key.KeyChar);
+                    Console.Write("*");
+                }
+            }
+            return input.ToString();
+        }
+
+        public static SecureString GetSecurePassword(string pass)
+        {
+            var securePass = new SecureString();
+
+            securePass.Clear();
+            foreach (var item in pass)//GetHiddenConsoleInput();
+            {
+                securePass.AppendChar(item);
+            }
+            return securePass;
+        }
+
+        public static bool AccountExists(string name)
+        {
+            bool bRet = false;
+
+            try
+            {
+                NTAccount acct = new NTAccount(name);
+                SecurityIdentifier id = (SecurityIdentifier)acct.Translate(typeof(SecurityIdentifier));
+
+                bRet = id.IsAccountSid();
+            }
+            catch (IdentityNotMappedException)
+            {
+                /* Invalid user account */
+            }
+
+            return bRet;
+        }
     }
 
 }
