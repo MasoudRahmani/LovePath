@@ -1,19 +1,17 @@
 ﻿using System;
-using System.Text;
 using System.Diagnostics;
 using System.Security;
-using System.IO;
 using LovePath.Util;
 using System.Threading.Tasks;
 using System.Threading;
-
-//todo: check return result of runas process then minimize
 
 namespace LovePath
 {
     class Program
     {
         static Mutex mutex = new Mutex(true, "Lovely Path Explorer - Masoud Dono for healp - :)");
+        private protected static SecureString _Securepasword;
+
         [STAThread]
         static void Main(string[] args)
         {
@@ -38,48 +36,46 @@ namespace LovePath
             }
 
         }
+
         static async void Start()
         {
+            bool OnetimeRun = true;
+            bool wrongpassword = false;
+
             var cnf = new Config();
-            string configFilePath = Path.Combine(cnf.ProgramPath, cnf.ConfigFileName);
-            if (!File.Exists(configFilePath))
-            {
-                var json = MySerialization.Serialize<Config>(cnf);
-                using (var sw = new StreamWriter(configFilePath, false, Encoding.UTF8))
-                    sw.WriteLine(json);
-            }
-            else
-            {
-                cnf = MySerialization.Deserialize<Config>(new StreamReader(configFilePath).ReadToEnd());
-            }
-
-            string user = cnf.User;
-            string explorer = Path.Combine(cnf.ProgramPath, cnf.XplorerName);
-            string love = cnf.LovePath;
-
-            if (!File.Exists(explorer)) Console.WriteLine("Explorer Not found!");
-
             while (true)
             {
-                var pressedkey = Console.ReadKey();
-                if (pressedkey.Key == ConsoleKey.Z) break;
-
-                if (pressedkey.Key == ConsoleKey.F1)
+                try
                 {
-                    pressedkey = Console.ReadKey();
-                    if (pressedkey.Key == ConsoleKey.Z) break;
-
-                    if (pressedkey.Key == ConsoleKey.Escape)
+                    var pressedkey = Console.ReadKey();
+                    if (pressedkey.Key == ConsoleKey.F1)
                     {
-                        Console.Clear();
-                        //var result = await RunasProcess_Shell(explorer, love, user); //Dont know how to read consoloe output since process is also working on console (get password)
-                        var result = RunasProcess_API(explorer, love, user);
-                        //if (result) ConsoleUtils.MinizeConsole();
-                        if (result) break; //exit
+                        pressedkey = Console.ReadKey();
+                        if (pressedkey.Key == ConsoleKey.Escape)
+                        {
+                            if (OnetimeRun)
+                            {
+                                cnf.Init(); OnetimeRun = false;
+                                wrongpassword = !cnf.UseInitialPassword;
+                            }
+                            if (wrongpassword) cnf.ChangePassword();
+
+                            _Securepasword = Utils.GetSecurePassword(cnf.Password);
+
+                            //var result = await RunasProcess_Shell(explorer, love, domain + @"\\" + user); //Dont know how to read consoloe output since process is also working on console (get password)
+                            //if (result) ConsoleUtils.MinizeConsole();
+                            var result = RunasProcess_API(cnf.ExplorerFullPath, cnf.LovePath, cnf.User, _Securepasword);
+                            if (result) break; //exit
+                            else { Console.Write("Failed!!"); wrongpassword = true; }
+                        }
+                        else ShowExit();
                     }
                     else ShowExit();
                 }
-                else ShowExit();
+                catch (Exception e)
+                {
+                    ShowExit(e.Message);
+                }
             }
         }
 
@@ -95,7 +91,7 @@ namespace LovePath
             Console.Clear();
         }
 
-        private async static Task<bool> RunasProcess_Shell(string explorer, string arg, string user)
+        private async static Task<bool> RunasProcess_Shell(string explorer, string arg, string userwithdomain)
         {
             using (Process cmd = new Process())
             {
@@ -106,7 +102,7 @@ namespace LovePath
                         FileName = "cmd.exe",
                         WindowStyle = ProcessWindowStyle.Hidden,
                         CreateNoWindow = false,
-                        Arguments = $"/c runas /profile /user:{Environment.UserDomainName}\\{user} " + $"\"{explorer} {arg}\"",
+                        Arguments = $"/c runas /profile /user:{userwithdomain} " + $"\"{explorer} {arg}\"",
                         //RedirectStandardInput = true,
                         //RedirectStandardOutput = true,
                         //RedirectStandardError = true,
@@ -129,12 +125,11 @@ namespace LovePath
             }
         }
 
-        private static bool RunasProcess_API(string filename, string arg, string user)
+        private static bool RunasProcess_API(string filename, string arg, string user_noDomain, SecureString pass)
         {
-            var pass = GetUserPass();
             using (Process cmd = new Process())
             {
-                
+
                 try
                 {
                     ProcessStartInfo startInfo = new ProcessStartInfo
@@ -146,7 +141,7 @@ namespace LovePath
                         RedirectStandardOutput = true,
                         //RedirectStandardError = true,
                         UseShellExecute = false,
-                        UserName = user,
+                        UserName = user_noDomain,
                         Password = pass,
                         LoadUserProfile = true
 
@@ -171,68 +166,14 @@ namespace LovePath
             }
         }
 
-        private static void ShowExit()
+        private static void ShowExit(string msg = "")
         {
             Console.Clear();
-            Console.WriteLine("  Press Z to exit...");
-        }
-
-        private static SecureString GetUserPass()
-        {
-            Console.Write("Password: ");
-
-            var securePass = new SecureString();
-
-            securePass.Clear();
-            foreach (var item in GetInputPassword())//GetHiddenConsoleInput();
-            {
-                securePass.AppendChar(item);
-            }
-            return securePass;
-        }
-        private static string GetHiddenConsoleInput()
-        {
-            StringBuilder input = new StringBuilder();
-            while (true)
-            {
-                var key = Console.ReadKey(true);
-                if (key.Key == ConsoleKey.Enter) break;
-                if (key.Key == ConsoleKey.Backspace && input.Length > 0) input.Remove(input.Length - 1, 1);
-                else if (key.Key != ConsoleKey.Backspace) input.Append(key.KeyChar);
-            }
-            return input.ToString();
-        }
-        public static string GetInputPassword()
-        {
-            StringBuilder input = new StringBuilder();
-            while (true)
-            {
-                int x = Console.CursorLeft;
-                int y = Console.CursorTop;
-                ConsoleKeyInfo key = Console.ReadKey(true);
-                if (key.Key == ConsoleKey.Enter)
-                {
-                    Console.WriteLine();
-                    break;
-                }
-                if (key.Key == ConsoleKey.Backspace && input.Length > 0)
-                {
-                    input.Remove(input.Length - 1, 1);
-                    Console.SetCursorPosition(x - 1, y);
-                    Console.Write(" ");
-                    Console.SetCursorPosition(x - 1, y);
-                }
-                else if (key.KeyChar < 32 || key.KeyChar > 126)
-                {
-                    Trace.WriteLine("Output suppressed: no key char"); //catch non-printable chars, e.g F1, CursorUp and so ...
-                }
-                else if (key.Key != ConsoleKey.Backspace)
-                {
-                    input.Append(key.KeyChar);
-                    Console.Write("*");
-                }
-            }
-            return input.ToString();
+            var newline = string.IsNullOrWhiteSpace(msg) ? "" : "\n";
+            Console.WriteLine($@"{msg}{newline} Press Z to exit...");
+            var pressedkey = Console.ReadKey();
+            if (pressedkey.Key == ConsoleKey.Z) Environment.Exit(0);
+            Console.WriteLine("  Start...");
         }
     }
 
