@@ -244,6 +244,14 @@ namespace LovePath.Util
 
             return bRet;
         }
+
+        public static AuthorizationRuleCollection GetFileAccessRule(string filePath)
+        {
+            FileInfo fi = new FileInfo(filePath);
+            FileSecurity fs = fi.GetAccessControl();
+
+            return fs.GetAccessRules(true, true, typeof(System.Security.Principal.NTAccount));
+        }
     }
 
 }
