@@ -4,6 +4,9 @@ using System.Security;
 using LovePath.Util;
 using System.Threading.Tasks;
 using System.Threading;
+using System.Security.AccessControl;
+
+// To write securly with encrypt i have to impersonate but reading config would be impossible? How! - maybe just config be loose?
 
 namespace LovePath
 {
@@ -37,36 +40,57 @@ namespace LovePath
 
         }
 
-        static async void Start()
+        static void Start()
         {
             bool OnetimeRun = true;
             bool wrongpassword = false;
+            var authorizedUsers = new System.Collections.Generic.List<string>();
 
             var cnf = new Config();
-            while (true)
+            while (true)// Exist only when Z is pressed
             {
                 try
                 {
-                    var pressedkey = Console.ReadKey();
-                    if (pressedkey.Key == ConsoleKey.F1)
+                    if (Console.ReadKey().Key == ConsoleKey.F1)
                     {
-                        pressedkey = Console.ReadKey();
-                        if (pressedkey.Key == ConsoleKey.Escape)
+                        if (Console.ReadKey().Key == ConsoleKey.Escape)
                         {
-                            if (OnetimeRun)
+                            if (OnetimeRun) // After Secret Entrance, We try to read config file or create it. Only once
                             {
-                                cnf.Init(); OnetimeRun = false;
-                                wrongpassword = !cnf.UseInitialPassword;
+                                cnf.Init(); 
+                                OnetimeRun = false;
+                                wrongpassword = !cnf.UseInitialPassword; //we get password to read config or create
+
+                                var rules = Utils.GetFileAccessRule(cnf.LovePath);
+                                foreach (AuthorizationRule rule in rules)
+                                {
+                                    authorizedUsers.Add(rule.IdentityReference.ToString());
+                                }
                             }
-                            if (wrongpassword) cnf.ChangePassword();
+                            if (wrongpassword)
+                            {
+                                Console.Clear();
+                                if (authorizedUsers.Count == 1)
+                                    Console.WriteLine($"User of VALID LovePath: {authorizedUsers[0]}");
+                                else
+                                    Console.WriteLine(
+                                        $"LovePath NOT valid OR Changed Permission.\n" +
+                                        $"Try thses Users:\n" +
+                                        $"\t{string.Join("\n\t", authorizedUsers) }"
+                                        );
+
+                                cnf.ChangePassword();
+                            }
 
                             _Securepasword = Utils.GetSecurePassword(cnf.Password);
 
-                            //var result = await RunasProcess_Shell(explorer, love, domain + @"\\" + user); //Dont know how to read consoloe output since process is also working on console (get password)
-                            //if (result) ConsoleUtils.MinizeConsole();
                             var result = RunasProcess_API(cnf.ExplorerFullPath, cnf.LovePath, cnf.User, _Securepasword);
                             if (result) break; //exit
-                            else { Console.Write("Failed!!"); wrongpassword = true; }
+                            else
+                            {
+                                Console.Write("Failed!!");
+                                wrongpassword = true;
+                            }
                         }
                         else ShowExit();
                     }
@@ -91,7 +115,12 @@ namespace LovePath
             Console.Clear();
         }
 
+
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+        //var result = await RunasProcess_Shell(explorer, love, domain + @"\\" + user); //Dont know how to read consoloe output since process is also working on console (get password)
+        //if (result) ConsoleUtils.MinizeConsole();
         private async static Task<bool> RunasProcess_Shell(string explorer, string arg, string userwithdomain)
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             using (Process cmd = new Process())
             {

@@ -72,12 +72,11 @@ namespace LovePath
 
             if (!File.Exists(configFilePath))
             {
-                Console.Write("No Domain (currently local) User :");
+                Console.Write("(No Domain) Just User:");
                 User = Console.ReadLine();
-
                 while (!Utils.AccountExists(User))
                 {
-                    Console.Write("Wrong User!, Again :");
+                    Console.Write("\nWrong User!, Again :");
                     User = Console.ReadLine();
                 }
 
@@ -85,59 +84,66 @@ namespace LovePath
                 _lovePath = @Console.ReadLine();
                 while (!Directory.Exists(@_lovePath))
                 {
-                    Console.WriteLine("Path is wrong!, Agian: ");
+                    Console.Write("\nPath is wrong!, Agian: ");
                     _lovePath = @Console.ReadLine();
                 }
+
                 var json = MySerialization.Serialize<Config>(this);
-                Utils.WriteFileSecurely(configFilePath, json, User, false);
+
+                //bool done = false;
+                //do
+                //{
+                    //Console.Write($"<{DomainName}\\{User}> config, Enter ");
+                    //var config_pass = Utils.GetInputPassword();
+
+                    //done = RunImpersonated(DomainName, User, config_pass, () =>
+                    //{
+                        Utils.WriteFileSecurely(configFilePath, json, User, false);
+                    //});
+                //    if (done)
+                //    {
+                //        Password = config_pass;
+                //        UseInitialPassword = true;
+                //    }
+                //    else Console.WriteLine("Something went wrong! try again.");
+
+                //} while (!done);
             }
             else
             {
-                FileInfo fi = new FileInfo(configFilePath);
-                FileSecurity fs = fi.GetAccessControl();
-
-                AuthorizationRuleCollection rules = fs.GetAccessRules(true, true, typeof(System.Security.Principal.NTAccount));
+                var rules = Utils.GetFileAccessRule(configFilePath);
 
                 if (rules.Count > 1) throw new Exception("Config file security permission is modified, delete it or change it back");
 
-                string[] config_permission = rules[0].IdentityReference.Value.Split('\\');
+                var config_permission = rules[0].IdentityReference.Value.Split('\\');
                 var config_domain = config_permission[0];
                 var config_user = config_permission[1];
 
-                Console.Write($"config of: <{string.Join("\\", config_permission)}>, ");
-                var config_pass = Utils.GetInputPassword();
-
-                Config cnf;
-                using (var imp = new UserImpersonation2())
+                bool done = false;
+                do
                 {
-                    bool sucess = false;
-                    while (!sucess)
+                    Console.Write($"<{string.Join("\\", config_permission)}> config, Enter ");
+                    var config_pass = Utils.GetInputPassword();
+
+                    done = RunImpersonated(config_domain, config_user, config_pass, () =>
                     {
-                        sucess = imp.ImpersonateValidUser(config_user, config_domain, config_pass);
+                        var cnf = MySerialization.Deserialize<Config>(new StreamReader(configFilePath).ReadToEnd());
 
-                        if (sucess)
-                        {
-                            cnf = MySerialization.Deserialize<Config>(new StreamReader(configFilePath).ReadToEnd());
-                            if (cnf.User == config_user && cnf.DomainName == config_domain)
-                                UseInitialPassword = true; //If config permission had the same user as user in config file we have the password, otherwise we need to ask again.
+                        if (cnf.User == config_user && cnf.DomainName == config_domain)
+                            UseInitialPassword = true; //If config permission had the same user as user in config file we have the password, otherwise we need to ask again.
+                        Password = config_pass;
 
-                            Password = config_pass;
+                        ProgramPath = cnf.ProgramPath;
+                        ConfigFileName = cnf.ConfigFileName;
+                        DomainName = cnf.DomainName;
 
-                            ProgramPath = cnf.ProgramPath;
-                            ConfigFileName = cnf.ConfigFileName;
-                            DomainName = cnf.DomainName;
+                        User = cnf.User;
+                        XplorerName = cnf.XplorerName;
+                        LovePath = cnf.LovePath;
+                    });
 
-                            User = cnf.User;
-                            XplorerName = cnf.XplorerName;
-                            LovePath = cnf.LovePath;
-                        }
-                        else
-                        {
-                            Console.Write($"config of: <{string.Join("\\", config_permission)}>, ");
-                            config_pass = Utils.GetInputPassword();
-                        }
-                    }
-                }
+                    if (!done) Console.WriteLine("Something went wrong! try again.");
+                } while (!done);
             }
 
             ExplorerFullPath = Path.Combine(ProgramPath, XplorerName);
@@ -155,7 +161,17 @@ namespace LovePath
             Console.Clear();
         }
 
-
+        private bool RunImpersonated(string domain, string user, string pass, Action action)
+        {
+            using (var imp = new UserImpersonation2())
+            {
+                if (imp.ImpersonateValidUser(user, domain, pass))
+                    action.Invoke();
+                else
+                    return false;
+            }
+            return true;
+        }
     }
 
 }
