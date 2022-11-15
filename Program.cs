@@ -7,6 +7,8 @@ using System.Threading;
 using System.Security.AccessControl;
 
 // To write securly with encrypt i have to impersonate but reading config would be impossible? How! - maybe just config be loose?
+//how to get access rule of a file which owner and user is changed?
+//maybe add everyone, just to read permission??
 
 namespace LovePath
 {
@@ -61,23 +63,23 @@ namespace LovePath
                                 OnetimeRun = false;
                                 wrongpassword = !cnf.UseInitialPassword; //we get password to read config or create
 
-                                var rules = Utils.GetFileAccessRule(cnf.LovePath);
-                                foreach (AuthorizationRule rule in rules)
-                                {
-                                    authorizedUsers.Add(rule.IdentityReference.ToString());
-                                }
+                                //var rules = Utils.GetFileAccessRule(cnf.LovePath);
+                                //foreach (AuthorizationRule rule in rules)
+                                //{
+                                //    authorizedUsers.Add(rule.IdentityReference.ToString());
+                                //}
                             }
                             if (wrongpassword)
                             {
                                 Console.Clear();
-                                if (authorizedUsers.Count == 1)
-                                    Console.WriteLine($"User of VALID LovePath: {authorizedUsers[0]}");
-                                else
-                                    Console.WriteLine(
-                                        $"LovePath NOT valid OR Changed Permission.\n" +
-                                        $"Try thses Users:\n" +
-                                        $"\t{string.Join("\n\t", authorizedUsers) }"
-                                        );
+                                //if (authorizedUsers.Count == 1)
+                                //    Console.WriteLine($"User of VALID LovePath: {authorizedUsers[0]}");
+                                //else
+                                //    Console.WriteLine(
+                                //        $"LovePath NOT valid OR Changed Permission.\n" +
+                                //        $"Try thses Users:\n" +
+                                //        $"\t{string.Join("\n\t", authorizedUsers) }"
+                                //        );
 
                                 cnf.ChangePassword();
                             }
