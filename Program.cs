@@ -5,10 +5,7 @@ using LovePath.Util;
 using System.Threading.Tasks;
 using System.Threading;
 using System.Security.AccessControl;
-
-// To write securly with encrypt i have to impersonate but reading config would be impossible? How! - maybe just config be loose?
-//how to get access rule of a file which owner and user is changed?
-//maybe add everyone, just to read permission??
+using System.Collections.Generic;
 
 namespace LovePath
 {
@@ -34,7 +31,9 @@ namespace LovePath
                 Start();
             }
             catch (Exception w)
-            { Console.WriteLine(w.Message); }
+            {
+                ShowExit(w.Message);
+            }
             finally
             {
                 mutex.ReleaseMutex();
@@ -46,7 +45,8 @@ namespace LovePath
         {
             bool OnetimeRun = true;
             bool wrongpassword = false;
-            var authorizedUsers = new System.Collections.Generic.List<string>();
+            var authorizedUsers = new List<string>();
+            var machineDefaultAccount = Utils.GetWellKnownSidsName();
 
             var cnf = new Config();
             while (true)// Exist only when Z is pressed
@@ -59,32 +59,44 @@ namespace LovePath
                         {
                             if (OnetimeRun) // After Secret Entrance, We try to read config file or create it. Only once
                             {
-                                cnf.Init(); 
+                                cnf.Init();
                                 OnetimeRun = false;
-                                wrongpassword = !cnf.UseInitialPassword; //we get password to read config or create
-
-                                //var rules = Utils.GetFileAccessRule(cnf.LovePath);
-                                //foreach (AuthorizationRule rule in rules)
-                                //{
-                                //    authorizedUsers.Add(rule.IdentityReference.ToString());
-                                //}
+                                wrongpassword = !cnf.UseInitialPassword; //we get password to read config or create it -- so it is ture if folder and config share user
+                                try
+                                {
+                                    var rules = Utils.GetFileAccessRule(cnf.LovePath);
+                                    foreach (AuthorizationRule rule in rules)
+                                    {
+                                        var found = machineDefaultAccount.Find(x => x.ToLowerInvariant().Contains(rule.IdentityReference.Value.ToLowerInvariant()));
+                                        //Not contain
+                                        if (string.IsNullOrWhiteSpace(found))
+                                            authorizedUsers.Add(rule.IdentityReference.ToString());
+                                    }
+                                }
+                                catch (Exception w)
+                                {
+                                    Console.WriteLine(
+                                        "Common: File/Folder has no readable access.\n\t" +
+                                        @"It's recommended (BUILTIN\\Users) has <Read permission> only on Love Folder." +
+                                        "\n--- Error:" + w.Message);
+                                }
                             }
                             if (wrongpassword)
                             {
-                                Console.Clear();
-                                //if (authorizedUsers.Count == 1)
-                                //    Console.WriteLine($"User of VALID LovePath: {authorizedUsers[0]}");
-                                //else
-                                //    Console.WriteLine(
-                                //        $"LovePath NOT valid OR Changed Permission.\n" +
-                                //        $"Try thses Users:\n" +
-                                //        $"\t{string.Join("\n\t", authorizedUsers) }"
-                                //        );
+                                if (authorizedUsers.Count == 0) Console.WriteLine("Permission to read users is denied. Guess Correct User on folder");
+                                else if (authorizedUsers.Count == 1)
+                                    Console.WriteLine($"User of VALID LovePath: {authorizedUsers[0]}");
+                                else
+                                    Console.WriteLine(
+                                        $"LovePath NOT valid OR Changed Permission.\n" +
+                                        $"Try thses Users:\n" +
+                                        $"\t{string.Join("\n\t", authorizedUsers) }"
+                                        );
 
                                 cnf.ChangePassword();
                             }
 
-                            _Securepasword = Utils.GetSecurePassword(cnf.Password);
+                            _Securepasword = Utils.ConvertToSecurePass(cnf.Password);
 
                             var result = RunasProcess_API(cnf.ExplorerFullPath, cnf.LovePath, cnf.User, _Securepasword);
                             if (result) break; //exit
@@ -115,45 +127,6 @@ namespace LovePath
             Console.SetBufferSize(70, 10);//no scrollbar
 
             Console.Clear();
-        }
-
-
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-        //var result = await RunasProcess_Shell(explorer, love, domain + @"\\" + user); //Dont know how to read consoloe output since process is also working on console (get password)
-        //if (result) ConsoleUtils.MinizeConsole();
-        private async static Task<bool> RunasProcess_Shell(string explorer, string arg, string userwithdomain)
-#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
-        {
-            using (Process cmd = new Process())
-            {
-                try
-                {
-                    ProcessStartInfo startInfo = new ProcessStartInfo
-                    {
-                        FileName = "cmd.exe",
-                        WindowStyle = ProcessWindowStyle.Hidden,
-                        CreateNoWindow = false,
-                        Arguments = $"/c runas /profile /user:{userwithdomain} " + $"\"{explorer} {arg}\"",
-                        //RedirectStandardInput = true,
-                        //RedirectStandardOutput = true,
-                        //RedirectStandardError = true,
-                        UseShellExecute = false,
-                        LoadUserProfile = true
-                    };
-                    cmd.StartInfo = startInfo;
-
-                    cmd.Start();
-
-                    cmd.WaitForExit();
-
-                    return true;
-                }
-                catch (Exception w)
-                {
-                    Console.WriteLine(w.Message);
-                    return false;
-                }
-            }
         }
 
         private static bool RunasProcess_API(string filename, string arg, string user_noDomain, SecureString pass)
@@ -205,6 +178,45 @@ namespace LovePath
             var pressedkey = Console.ReadKey();
             if (pressedkey.Key == ConsoleKey.Z) Environment.Exit(0);
             Console.WriteLine("  Start...");
+        }
+
+
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+        //var result = await RunasProcess_Shell(explorer, love, domain + @"\\" + user); //Dont know how to read consoloe output since process is also working on console (get password)
+        //if (result) ConsoleUtils.MinizeConsole();
+        private async static Task<bool> RunasProcess_Shell(string explorer, string arg, string userwithdomain)
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+        {
+            using (Process cmd = new Process())
+            {
+                try
+                {
+                    ProcessStartInfo startInfo = new ProcessStartInfo
+                    {
+                        FileName = "cmd.exe",
+                        WindowStyle = ProcessWindowStyle.Hidden,
+                        CreateNoWindow = false,
+                        Arguments = $"/c runas /profile /user:{userwithdomain} " + $"\"{explorer} {arg}\"",
+                        //RedirectStandardInput = true,
+                        //RedirectStandardOutput = true,
+                        //RedirectStandardError = true,
+                        UseShellExecute = false,
+                        LoadUserProfile = true
+                    };
+                    cmd.StartInfo = startInfo;
+
+                    cmd.Start();
+
+                    cmd.WaitForExit();
+
+                    return true;
+                }
+                catch (Exception w)
+                {
+                    Console.WriteLine(w.Message);
+                    return false;
+                }
+            }
         }
     }
 
