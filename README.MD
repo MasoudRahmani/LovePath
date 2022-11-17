@@ -1,6 +1,7 @@
 
 
 
+
 What is the Idea?
 ------------
 Main point of this project is to clear **all permission of a folder** and give it to **one** person only so no one else can open it *not even the administrator*.
@@ -72,11 +73,13 @@ Windows explorer is limited and on some OS version is not possible therefore i a
     Code= x-x-x-x
     dc=0
 
+**Remember the only valid user to run is config user, even though program check for user permission on files and folder it still tries to run with config user and if it doesn't exist or permission is removed you should change config or delete it.**
+
 **Issue**
 ---------
 ***Common Method Errors:***
 
-**Access:**
+**1. Access:**
 
 Since running between users has permission conflict these error may happen.
 
@@ -90,7 +93,7 @@ Application has to run somewhere where user can access third-party program. if y
 
 > Access Denied!
 
-**Exception Handling:**
+**2. Exception Handling:**
 
 Since it's a third party explorer getting feedback is tricky.
 With 
@@ -98,6 +101,11 @@ With
 **RunasProcess_API** you can make sure your app would run since otherwise `Process` would throw exception.
 
 **RunasProcess_Shell** since you need to read `console` output and runas command require user to input password, its harder (not implemented) (maybe user psexec )
+
+ ***3. Encryption - Permission of Config File***
+
+ With program premise There is no way to read who is owner of config file or who has permission , Therefore asking for < password and user> multiple time is tedious. currently work around is to add "(BUILTIN\\Users)" and assign "Read Permission" access only. so we could get user name.
+
 
 Hopes
 --------------
