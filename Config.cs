@@ -1,5 +1,6 @@
 ﻿using LovePath.Util;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Security.AccessControl;
@@ -90,32 +91,41 @@ namespace LovePath
 
                 var json = MySerialization.Serialize<Config>(this);
 
-                //bool done = false;
-                //do
-                //{
-                    //Console.Write($"<{DomainName}\\{User}> config, Enter ");
-                    //var config_pass = Utils.GetInputPassword();
+                bool done = false;
+                do
+                {
+                    Console.Write($"<{DomainName}\\{User}> config, Enter ");
+                    var config_pass = Utils.GetInputPassword();
 
-                    //done = RunImpersonated(DomainName, User, config_pass, () =>
-                    //{
-                        Utils.WriteFileSecurely(configFilePath, json, User, false);
-                    //});
-                //    if (done)
-                //    {
-                //        Password = config_pass;
-                //        UseInitialPassword = true;
-                //    }
-                //    else Console.WriteLine("Something went wrong! try again.");
+                    done = RunImpersonated(DomainName, User, config_pass, () =>
+                    {
+                        Utils.WriteFileSecurely(configFilePath, json, User, true);
+                    });
+                    if (done)
+                    {
+                        Password = config_pass;
+                        UseInitialPassword = true;
+                    }
+                    else Console.WriteLine("Something went wrong! try again.");
 
-                //} while (!done);
+                } while (!done);
             }
             else
             {
                 var rules = Utils.GetFileAccessRule(configFilePath);
+                var wellknownacc = Utils.GetWellKnownSidsName();
+                List<string> validUsers = new List<string>();
 
-                if (rules.Count > 1) throw new Exception("Config file security permission is modified, delete it or change it back");
-
-                var config_permission = rules[0].IdentityReference.Value.Split('\\');
+                foreach (FileSystemAccessRule rule in rules)
+                {
+                    var found = wellknownacc.Find(x => x.ToLowerInvariant().Contains(rule.IdentityReference.Value.ToLowerInvariant()));
+                    if (string.IsNullOrWhiteSpace(found))
+                    {
+                        if (FileSystemRights.FullControl == rule.FileSystemRights)
+                            validUsers.Add(rule.IdentityReference.Value);
+                    }
+                }
+                var config_permission = validUsers[0].Split('\\');
                 var config_domain = config_permission[0];
                 var config_user = config_permission[1];
 
