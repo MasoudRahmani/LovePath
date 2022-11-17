@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Management;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization.Json;
 using System.Security;
@@ -115,46 +117,13 @@ namespace LovePath.Util
 
     public static class Utils
     {
-        /// <summary>
-        /// Remove all Permission of a file or folder and set only the given user
-        /// </summary>
-        /// <param name="filePath"> file or directory</param>
-        /// <param name="domainName">domain, if empty current domain</param>
-        /// <param name="userName">which user to have full control</param>
-        //https://stackoverflow.com/questions/18740860/remove-all-default-file-permissions
-        public static void Clear_SetFileSecurity(string filePath, string userName, string domainName = "")
+        public static AuthorizationRuleCollection GetFileAccessRule(string filePath)
         {
-            if (String.IsNullOrWhiteSpace(domainName))
-            {
-                domainName = Environment.UserDomainName;
-            }
-
-            //get file info
             FileInfo fi = new FileInfo(filePath);
-
-            //get security access
             FileSecurity fs = fi.GetAccessControl();
 
-            //remove any inherited access
-            fs.SetAccessRuleProtection(true, false);
-
-            //get any special user access
-            AuthorizationRuleCollection rules = fs.GetAccessRules(true, true, typeof(System.Security.Principal.NTAccount));
-
-            //remove any special access
-            foreach (FileSystemAccessRule rule in rules)
-                fs.RemoveAccessRule(rule);
-
-            //add current user with full control.
-            fs.AddAccessRule(new FileSystemAccessRule(domainName + "\\" + userName, FileSystemRights.FullControl, AccessControlType.Allow));
-
-            //add all other users delete only permissions.
-            //fs.AddAccessRule(new FileSystemAccessRule("Authenticated Users", FileSystemRights.Delete, AccessControlType.Allow));
-
-            //flush security access.
-            File.SetAccessControl(filePath, fs);
+            return fs.GetAccessRules(true, true, typeof(System.Security.Principal.NTAccount));
         }
-
         public static void WriteFileSecurely(string path, string data, string user, bool encrypted = false)
         {
             using (FileStream fs = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, (encrypted) ? FileOptions.Encrypted : FileOptions.None))
@@ -163,7 +132,46 @@ namespace LovePath.Util
                 fs.Write(byt, 0, byt.Length);
             }
 
-            Util.Utils.Clear_SetFileSecurity(path, user);
+            Clear_SetFileSecurity(path, user);
+        }
+
+        /// <summary>
+        /// Remove all Permission of a file or folder and set only the given user
+        /// https://stackoverflow.com/questions/18740860/remove-all-default-file-permissions
+        /// </summary>
+        /// <param name="filePath"> file or directory</param>
+        /// <param name="domainName">domain, if empty current domain</param>
+        /// <param name="userName">which user to have full control</param>
+        public static void Clear_SetFileSecurity(string filePath, string userName, string domainName = "")
+        {
+            if (string.IsNullOrWhiteSpace(domainName))
+            {
+                domainName = Environment.UserDomainName;
+            }
+
+            FileInfo fi = new FileInfo(filePath);//get file info
+            FileSecurity fs = fi.GetAccessControl();//get security access
+
+            //remove any inherited access
+            fs.SetAccessRuleProtection(true, false);
+
+            //get any special user access
+            AuthorizationRuleCollection rules = fs.GetAccessRules(true, true, typeof(NTAccount));
+
+            //remove any special access
+            foreach (FileSystemAccessRule rule in rules)
+                fs.RemoveAccessRule(rule);
+
+            //add current user with full control.
+            fs.AddAccessRule(new FileSystemAccessRule(domainName + "\\" + userName, FileSystemRights.FullControl, AccessControlType.Allow));
+            var builtin_user = new SecurityIdentifier(WellKnownSidType.BuiltinUsersSid, null);
+
+            fs.AddAccessRule(new FileSystemAccessRule(builtin_user, FileSystemRights.ReadPermissions, InheritanceFlags.None, PropagationFlags.NoPropagateInherit, AccessControlType.Allow));
+            //add all other users delete only permissions.
+            //fs.AddAccessRule(new FileSystemAccessRule("Authenticated Users", FileSystemRights.Delete, AccessControlType.Allow));
+
+            //flush security access.
+            File.SetAccessControl(filePath, fs);
         }
 
 
@@ -214,7 +222,72 @@ namespace LovePath.Util
             return input.ToString();
         }
 
-        public static SecureString GetSecurePassword(string pass)
+        public static List<string> GetMachineUsers()
+        {
+            var localUsers = new List<string>();
+            SelectQuery query = new SelectQuery("Win32_UserAccount");
+            ManagementObjectSearcher searcher = new ManagementObjectSearcher(query);
+            foreach (ManagementObject envVar in searcher.Get())
+            {
+                localUsers.Add((string)envVar["Name"]);
+            }
+            return localUsers;
+        }
+        public static List<string> GetWellKnownSidsName()
+        {
+            List<string> sids = new List<string>();
+
+            SecurityIdentifier sid;
+            string sidName;
+            foreach (WellKnownSidType sidType in Enum.GetValues(typeof(WellKnownSidType)))
+            {
+                try
+                {
+                    sid = new SecurityIdentifier(sidType, null);
+                }
+                catch
+                {
+                    Debug.WriteLine("failed to create: " + sidType.ToString());
+                    continue;
+                }
+                sidName = TranslateSid(sid);
+
+                if (string.IsNullOrEmpty(sidName) == false)
+                    sids.Add(sidName);
+            }
+            return sids;
+        }
+
+        public static bool AccountExists(string name)
+        {
+            bool bRet = false;
+            try
+            {
+                NTAccount acct = new NTAccount(name);
+                SecurityIdentifier id = (SecurityIdentifier)acct.Translate(typeof(SecurityIdentifier));
+
+                bRet = id.IsAccountSid();
+            }
+            catch (IdentityNotMappedException)
+            {
+                //
+            }
+            return bRet;
+        }
+        public static string TranslateSid(SecurityIdentifier sid)
+        {
+            string sidName = string.Empty;
+            try
+            {
+                sidName = sid.Translate(typeof(NTAccount)).ToString();
+            }
+            catch
+            {
+                Debug.WriteLine("failed to translate: " + sid.ToString());
+            }
+            return sidName;
+        }
+        public static SecureString ConvertToSecurePass(string pass)
         {
             var securePass = new SecureString();
 
@@ -226,32 +299,7 @@ namespace LovePath.Util
             return securePass;
         }
 
-        public static bool AccountExists(string name)
-        {
-            bool bRet = false;
 
-            try
-            {
-                NTAccount acct = new NTAccount(name);
-                SecurityIdentifier id = (SecurityIdentifier)acct.Translate(typeof(SecurityIdentifier));
-
-                bRet = id.IsAccountSid();
-            }
-            catch (IdentityNotMappedException)
-            {
-                /* Invalid user account */
-            }
-
-            return bRet;
-        }
-
-        public static AuthorizationRuleCollection GetFileAccessRule(string filePath)
-        {
-            FileInfo fi = new FileInfo(filePath);
-            FileSecurity fs = fi.GetAccessControl();
-
-            return fs.GetAccessRules(true, true, typeof(System.Security.Principal.NTAccount));
-        }
     }
 
 }
