@@ -6,6 +6,10 @@ using System.Threading.Tasks;
 using System.Threading;
 using System.Security.AccessControl;
 using System.Collections.Generic;
+using System.Text;
+using System.IO;
+
+//bug of saving config and reading config
 
 namespace LovePath
 {
@@ -46,7 +50,7 @@ namespace LovePath
             bool OnetimeRun = true;
             bool wrongpassword = false;
             var authorizedUsers = new List<string>();
-            var machineDefaultAccount = Utils.GetWellKnownSidsName();
+            var machineDefaultAccount = SysSecurityUtils.GetWellKnownSidsName();
 
             var cnf = new Config();
             while (true)// Exist only when Z is pressed
@@ -64,7 +68,7 @@ namespace LovePath
                                 wrongpassword = !cnf.UseInitialPassword; //we get password to read config or create it -- so it is ture if folder and config share user
                                 try
                                 {
-                                    var rules = Utils.GetFileAccessRule(cnf.LovePath);
+                                    var rules = SysSecurityUtils.GetFileAccessRule(cnf.LovePath);
                                     foreach (AuthorizationRule rule in rules)
                                     {
                                         var found = machineDefaultAccount.Find(x => x.ToLowerInvariant().Contains(rule.IdentityReference.Value.ToLowerInvariant()));
@@ -96,7 +100,7 @@ namespace LovePath
                                 cnf.ChangePassword();
                             }
 
-                            _Securepasword = Utils.ConvertToSecurePass(cnf.Password);
+                            _Securepasword = Utils.ConvertToSecureString(cnf.Password);
 
                             var result = RunasProcess_API(cnf.ExplorerFullPath, cnf.LovePath, cnf.User, _Securepasword);
                             if (result) break; //exit
@@ -128,6 +132,16 @@ namespace LovePath
 
             Console.Clear();
         }
+        private static void ShowExit(string msg = "")
+        {
+            Console.Clear();
+            var newline = string.IsNullOrWhiteSpace(msg) ? "" : "\n";
+            Console.WriteLine($@"{msg}{newline} Press Z to exit...");
+            var pressedkey = Console.ReadKey();
+            if (pressedkey.Key == ConsoleKey.Z) Environment.Exit(0);
+            Console.WriteLine("  Start...");
+        }
+
 
         private static bool RunasProcess_API(string filename, string arg, string user_noDomain, SecureString pass)
         {
@@ -170,25 +184,14 @@ namespace LovePath
             }
         }
 
-        private static void ShowExit(string msg = "")
-        {
-            Console.Clear();
-            var newline = string.IsNullOrWhiteSpace(msg) ? "" : "\n";
-            Console.WriteLine($@"{msg}{newline} Press Z to exit...");
-            var pressedkey = Console.ReadKey();
-            if (pressedkey.Key == ConsoleKey.Z) Environment.Exit(0);
-            Console.WriteLine("  Start...");
-        }
 
-
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-        //var result = await RunasProcess_Shell(explorer, love, domain + @"\\" + user); //Dont know how to read consoloe output since process is also working on console (get password)
         //if (result) ConsoleUtils.MinizeConsole();
-        private async static Task<bool> RunasProcess_Shell(string explorer, string arg, string userwithdomain)
-#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+        private static bool RunasProcess_Shell(string command, string arg, string userwithdomain)
         {
             using (Process cmd = new Process())
             {
+                string fullcmd = $"\"{command} \"{@arg}\"\"";
+                string final = $"/c runas /profile /user:{userwithdomain} " + fullcmd;
                 try
                 {
                     ProcessStartInfo startInfo = new ProcessStartInfo
@@ -196,10 +199,10 @@ namespace LovePath
                         FileName = "cmd.exe",
                         WindowStyle = ProcessWindowStyle.Hidden,
                         CreateNoWindow = false,
-                        Arguments = $"/c runas /profile /user:{userwithdomain} " + $"\"{explorer} {arg}\"",
-                        //RedirectStandardInput = true,
-                        //RedirectStandardOutput = true,
-                        //RedirectStandardError = true,
+                        Arguments = final,
+                        RedirectStandardInput = false,
+                        RedirectStandardOutput = false,
+                        RedirectStandardError = false,
                         UseShellExecute = false,
                         LoadUserProfile = true
                     };
@@ -218,6 +221,7 @@ namespace LovePath
                 }
             }
         }
+
     }
 
 
