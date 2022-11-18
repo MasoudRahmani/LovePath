@@ -12,18 +12,20 @@ What is the Idea?
 ------------
 Main point of this project is to clear **all permission of a folder** and give it to **one** person only so no one else can open it *not even the administrator*.
 
-![Only one user Permission](https://i.imgur.com/duG5djv.jpeg)
+![Only one user Permission](https://raw.githubusercontent.com/MasoudRahmani/LovePath/master/media/True_Permission.jpg)
 Therefore if another user wants to open it, need to use user password.
+
+![Unknown Owner](https://raw.githubusercontent.com/MasoudRahmani/LovePath/master/media/Permission_Denied.jpg)
 
 **Make sure** To encrypt folder so even **changing the owner** of folder has no effect
 
-![Encrypt Folder](https://i.imgur.com/UhGTANN.jpeg)
+![Encrypt Folder](https://raw.githubusercontent.com/MasoudRahmani/LovePath/master/media/Encrypt_file.jpg)
 
 And it's better to not hide or make it a system file. Don't `attrib +h +s`!
 
 Hiding in plain sight works wonder, since they can't even find who owns this.
 
-![Unknown Owner](https://i.imgur.com/RBxV2PB.png)
+
 
 **This way even `cipher /u /n /h` can not find any encrypted file and folders.**
 
