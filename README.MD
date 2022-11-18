@@ -17,7 +17,9 @@ Therefore if another user wants to open it, need to use user password.
 
 ![Unknown Owner](https://raw.githubusercontent.com/MasoudRahmani/LovePath/master/media/Permission_Denied.jpg)
 
-**Make sure** To encrypt folder so even **changing the owner** of folder has no effect
+**Make sure** To encrypt folder so even **changing the owner** of folder has no effect. 
+
+***Don't forget to log-in to user and backypu encryption keys***
 
 ![Encrypt Folder](https://raw.githubusercontent.com/MasoudRahmani/LovePath/master/media/Encrypt_file.jpg)
 
