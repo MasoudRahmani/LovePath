@@ -43,6 +43,7 @@ Hiding in plain sight works wonder, since they can't even find who owns this.
 **Result:**
 
 ![interactive_nouser](https://raw.githubusercontent.com/MasoudRahmani/LovePath/master/media/interactive_logon_screen.png)
+
 2. ***Hide Specific User Accounts From The Logon Screen***, hide one or more user accounts from the logon screen but would like to leave others visible.
 
 _**Note:**_  there is no other way to access hidden account from the logon screen. If you need access to the account but still hide it from the logon screen, use first way.
