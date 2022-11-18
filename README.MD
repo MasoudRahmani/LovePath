@@ -33,7 +33,6 @@ Hiding in plain sight works wonder, since they can't even find who owns this.
 1. ***Enable Interactive Logon*** : it shows no users on the logon screen at all. Instead you have to manually type the username you want to log in with and any password.
 * Open **Secpol.msc** or type `Local Security Policy` in start. Click on Local Policies > Security Options.
 * Find  `Interactive logon: Do not display last user name` and **Enabled** it.
-Read More: [https://www.raymond.cc/blog/hide-user-accounts-from-the-windows-xp-welcome-screen/](https://www.raymond.cc/blog/hide-user-accounts-from-the-windows-xp-welcome-screen/)
 ![Change Security for interactive logon](https://raw.githubusercontent.com/MasoudRahmani/LovePath/master/media/secpol_interactive_logon.png)
 **Result:**
 ![interactive_nouser](https://raw.githubusercontent.com/MasoudRahmani/LovePath/master/media/interactive_logon_screen.png)
