@@ -75,13 +75,13 @@ Windows explorer is limited and on some OS version is not possible therefore i a
     Code= x-x-x-x
     dc=0
 
-**Remember there are two impersonation:
+***Remember there are two impersonation:***
 
-1. For Config File to get which user has access to config file and ask for password.
+1. **Impersonate To Open Config File:** Get which user has access to config file and ask for password. (maybe create my own user in future)
 
-2. Impersonate specified *User* in config file to open file/folder written for `LovePath` in config.
+2. **Impersonate specified *User* in config:** to file to open file/folder written in config for `LovePath`.
 
-The only valid user to Impersonate for *LovePath* is in config, if user doesn't exist or permission is changed you should change config or delete it.**
+**The only valid user to Impersonate for *LovePath* is in config, if user doesn't exist or permission is changed you should change config or delete it.**
 
 **Issue**
 ---------
