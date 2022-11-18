@@ -126,13 +126,15 @@ namespace LovePath.Util
         }
         public static void WriteFileSecurely(string path, string data, string user, bool encrypted = false)
         {
-            using (FileStream fs = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, (encrypted) ? FileOptions.Encrypted : FileOptions.None))
+            using (FileStream fs = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096))
             {
                 var byt = Encoding.UTF8.GetBytes(data);
                 fs.Write(byt, 0, byt.Length);
             }
 
             Clear_SetFileSecurity(path, user);
+
+            if (encrypted) File.Encrypt(path);
         }
 
         /// <summary>
