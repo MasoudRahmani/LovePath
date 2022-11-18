@@ -75,7 +75,13 @@ Windows explorer is limited and on some OS version is not possible therefore i a
     Code= x-x-x-x
     dc=0
 
-**Remember the only valid user to run is config user, even though program check for user permission on files and folder it still tries to run with config user and if it doesn't exist or permission is removed you should change config or delete it.**
+**Remember there are two impersonation:
+
+1. For Config File to get which user has access to config file and ask for password.
+
+2. Impersonate specified *User* in config file to open file/folder written for `LovePath` in config.
+
+The only valid user to Impersonate for *LovePath* is in config, if user doesn't exist or permission is changed you should change config or delete it.**
 
 **Issue**
 ---------
