@@ -79,7 +79,7 @@ Windows explorer is limited and on some OS version is not possible therefore i a
 
 1. **Impersonate To Open Config File:** Get which user has access to config file and ask for password. (maybe create my own user in future)
 
-2. **Impersonate specified *User* in config:** to file to open file/folder written in config for `LovePath`.
+2. **Impersonate specified *User* in config:** to open file/folder written in config for `LovePath`.
 
 **The only valid user to Impersonate for *LovePath* is in config, if user doesn't exist or permission is changed you should change config or delete it.**
 
@@ -112,18 +112,22 @@ With
 
  ***3. Encryption - Permission of Config File***
 
- With program premise There is no way to read who is owner of config file or who has permission , Therefore asking for < password and user> multiple time is tedious. 
+ With program premise There is no way to read who is owner of config file or who has permission , Therefore asking for **password and user** multiple time is tedious. 
  
- Current work around is to add "(BUILTIN\\Users)" and assign "Read Permission" access only. so we could get user name only for config file, Secure Path (LovePath) Should have nothing but user.
+We change ***CONFIG*** file permission to add "(BUILTIN\\Users)" with "Read Permission" access only. therefore we can get owner and ask for password.
 
- We Get required user to login via config so Secure Path don't nead any other permission.
+With Encryption and Current permission reading config is impossible But **They can delete it.**
+
+**That is Why Your `LovePath` Should only have one owner and access.**
+
+Happy Life. ❤️❤️
 
 
 Hopes
 --------------
 * Have built-in explorer functionality.
-* Run as user in a elevated way so can access any path **Except** Those place where even administrators can **NOT**.
 * Maybe as service or tray so That explicit shortcut opens it.
+* My own user to create config file.
 
 
 ***IF there is another app like this with Exact agenda tell me so I CAN USE IT.***
