@@ -13,13 +13,14 @@ What is the Idea?
 Main point of this project is to clear **all permission of a folder** and give it to **one** person only so no one else can open it *not even the administrator*.
 
 ![Only one user Permission](https://raw.githubusercontent.com/MasoudRahmani/LovePath/master/media/True_Permission.jpg)
-Therefore if another user wants to open it, need to use user password.
+
+*Therefore if **another user** wants to open it, need to use user password.*
 
 ![Unknown Owner](https://raw.githubusercontent.com/MasoudRahmani/LovePath/master/media/Permission_Denied.jpg)
 
 **Make sure** To encrypt folder so even **changing the owner** of folder has no effect. 
 
-***Don't forget to log-in to user and backypu encryption keys***
+_**Note:**_  ***Don't forget to log-in to user and backup encryption keys***
 
 ![Encrypt Folder](https://raw.githubusercontent.com/MasoudRahmani/LovePath/master/media/Encrypt_file.jpg)
 
@@ -38,7 +39,9 @@ Hiding in plain sight works wonder, since they can't even find who owns this.
 * Open **Secpol.msc** or type `Local Security Policy` in start. Click on Local Policies > Security Options.
 * Find  `Interactive logon: Do not display last user name` and **Enabled** it.
 ![Change Security for interactive logon](https://raw.githubusercontent.com/MasoudRahmani/LovePath/master/media/secpol_interactive_logon.png)
+
 **Result:**
+
 ![interactive_nouser](https://raw.githubusercontent.com/MasoudRahmani/LovePath/master/media/interactive_logon_screen.png)
 2. ***Hide Specific User Accounts From The Logon Screen***, hide one or more user accounts from the logon screen but would like to leave others visible.
 
