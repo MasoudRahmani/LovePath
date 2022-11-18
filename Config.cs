@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Security.AccessControl;
+using System.Security.Principal;
 
 namespace LovePath
 {
@@ -59,6 +60,7 @@ namespace LovePath
         public string ExplorerFullPath; // from init()
         public string Password;
         public bool UseInitialPassword = false; //If config permission had the same user as user in config file we have the password, otherwise we need to ask again.
+        public string FullAccountName = string.Empty;
 
         public Config()
         {
@@ -75,11 +77,12 @@ namespace LovePath
             {
                 Console.Write("(No Domain) Just User:");
                 User = Console.ReadLine();
-                while (!Utils.AccountExists(User))
+                while (!SysSecurityUtils.AccountExists(User))
                 {
                     Console.Write("\nWrong User!, Again :");
                     User = Console.ReadLine();
                 }
+                FullAccountName = $"{DomainName}\\{User}";
 
                 Console.Write("\nLovePath:");
                 _lovePath = @Console.ReadLine();
@@ -94,12 +97,16 @@ namespace LovePath
                 bool done = false;
                 do
                 {
-                    Console.Write($"<{DomainName}\\{User}> config, Enter ");
-                    var config_pass = Utils.GetInputPassword();
+                    Console.Write($"{FullAccountName} config, Enter ");
+                    var config_pass = ConsoleUtils.GetInputPassword();
 
                     done = RunImpersonated(DomainName, User, config_pass, () =>
                     {
-                        Utils.WriteFileSecurely(configFilePath, json, User, true);
+                        Utils.WriteEncryptedFile(configFilePath, json, false);//encryption has bug. can't read file after restart
+                        SysSecurityUtils.ClearFileAccessRule(configFilePath);
+
+                        SysSecurityUtils.AllowFileAccessRule(configFilePath, FullAccountName, FileSystemRights.FullControl);
+                        SysSecurityUtils.AllowFileAccessRule(configFilePath, WellKnownSidType.BuiltinUsersSid, FileSystemRights.ReadPermissions);
                     });
                     if (done)
                     {
@@ -112,9 +119,9 @@ namespace LovePath
             }
             else
             {
-                var rules = Utils.GetFileAccessRule(configFilePath);
-                var wellknownacc = Utils.GetWellKnownSidsName();
-                List<string> validUsers = new List<string>();
+                var rules = SysSecurityUtils.GetFileAccessRule(configFilePath);
+                var wellknownacc = SysSecurityUtils.GetWellKnownSidsName();
+                var validUsers = new List<string>();
 
                 foreach (FileSystemAccessRule rule in rules)
                 {
@@ -133,7 +140,7 @@ namespace LovePath
                 do
                 {
                     Console.Write($"<{string.Join("\\", config_permission)}> config, Enter ");
-                    var config_pass = Utils.GetInputPassword();
+                    var config_pass = ConsoleUtils.GetInputPassword();
 
                     done = RunImpersonated(config_domain, config_user, config_pass, () =>
                     {
@@ -150,6 +157,8 @@ namespace LovePath
                         User = cnf.User;
                         XplorerName = cnf.XplorerName;
                         LovePath = cnf.LovePath;
+
+                        FullAccountName = $"{DomainName}\\{User}";
                     });
 
                     if (!done) Console.WriteLine("Something went wrong! try again.");
@@ -162,20 +171,19 @@ namespace LovePath
             {
                 throw new Exception("Explorer Not found!\nMake sure Third-party Explorer is located beside main program.\nIf you have changed the name, change the name in config too.");
             }
-            Console.Clear();
         }
 
         public void ChangePassword()
         {
-            Password = Utils.GetInputPassword();
+            Password = ConsoleUtils.GetInputPassword();
             Console.Clear();
         }
 
         private bool RunImpersonated(string domain, string user, string pass, Action action)
         {
-            using (var imp = new UserImpersonation2())
+            using (var imp = new UserImpersonation2(user, domain, pass))
             {
-                if (imp.ImpersonateValidUser(user, domain, pass))
+                if (imp.ImpersonateValidUser())
                     action.Invoke();
                 else
                     return false;

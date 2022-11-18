@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LovePath
 {
@@ -119,11 +115,7 @@ namespace LovePath
         string _domain;
         string _passWord;
 
-        public UserImpersonation2()
-        {
-
-        }
-        public void Init(string userName, string domain, string passWord)
+        public UserImpersonation2(string userName, string domain, string passWord)
         {
             _userName = userName;
             _domain = domain;
@@ -133,9 +125,9 @@ namespace LovePath
         const int LOGON32_PROVIDER_DEFAULT = 0;
         const int LOGON32_LOGON_INTERACTIVE = 2;
 
-        public bool ImpersonateValidUser(string userName, string domain, string passWord)
+        public bool ImpersonateValidUser()
         {
-            Init(userName, domain, passWord);
+
             bool returnValue = LogonUser(_userName, _domain, _passWord,
                     LOGON32_LOGON_INTERACTIVE, LOGON32_PROVIDER_DEFAULT,
                     ref tokenHandle);
