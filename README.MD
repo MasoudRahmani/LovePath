@@ -60,7 +60,7 @@ This repository
 https://user-images.githubusercontent.com/54465233/200173146-8b116bec-5076-4b53-a257-2553f089917c.mp4
 
 
-https://github.com/MasoudRahmani/LovePath/raw/master/usage_edit.mp4
+https://github.com/MasoudRahmani/LovePath/raw/master/media/usage_edit.mp4
 
 Right now main problem is how to use any explorer(for convenience) to open folder.
 
