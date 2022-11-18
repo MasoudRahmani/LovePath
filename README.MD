@@ -23,15 +23,15 @@ Hiding in plain sight works wonder, since they can't even find who owns this.
 
 **This way even `cipher /u /n /h` can not find any encrypted file and folders.**
 
-Why?
+Why? ( **Most Important: people talks against Force and torture.**)
 --------
-When you could use Bit-locker or other locking password why this?
+When you could use Bit-locker / Virtual Disk or any other locking password why this?
 
  1. General idea is to not use any locking app and just use windows features. 
 
 2. **Hide** something in a way that is not obvious so they can't find a
         application or *easy* to access **setting** which allows them to get an
-        idea that something is locked. 
+        idea that something is locked. (finding bitlocker and VD is easy)
 
 	They Have to get every folder permission to see if they have access or not. (not common to search like this,
         especially if they are in a hurry)
