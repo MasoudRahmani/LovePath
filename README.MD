@@ -1,3 +1,4 @@
+
 **Releases** are here or build yourself:
 
 https://github.com/MasoudRahmani/LovePath/tree/master/LovePath_Releases
@@ -25,6 +26,26 @@ Hiding in plain sight works wonder, since they can't even find who owns this.
 ![Unknown Owner](https://i.imgur.com/RBxV2PB.png)
 
 **This way even `cipher /u /n /h` can not find any encrypted file and folders.**
+
+## Hide User at logon
+
+[[source](https://www.raymond.cc/blog/hide-user-accounts-from-the-windows-xp-welcome-screen/)]
+1. ***Enable Interactive Logon*** : it shows no users on the logon screen at all. Instead you have to manually type the username you want to log in with and any password.
+* Open **Secpol.msc** or type `Local Security Policy` in start. Click on Local Policies > Security Options.
+* Find  `Interactive logon: Do not display last user name` and **Enabled** it.
+Read More: [https://www.raymond.cc/blog/hide-user-accounts-from-the-windows-xp-welcome-screen/](https://www.raymond.cc/blog/hide-user-accounts-from-the-windows-xp-welcome-screen/)
+![Change Security for interactive logon](https://raw.githubusercontent.com/MasoudRahmani/LovePath/master/media/secpol_interactive_logon.png)
+**Result:**
+![interactive_nouser](https://raw.githubusercontent.com/MasoudRahmani/LovePath/master/media/interactive_logon_screen.png)
+2. ***Hide Specific User Accounts From The Logon Screen***, hide one or more user accounts from the logon screen but would like to leave others visible.
+
+_**Note:**_  there is no other way to access hidden account from the logon screen. If you need access to the account but still hide it from the logon screen, use first way.
+
+> Change **ChangeMe** to the user name you want to hide.
+
+    [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\SpecialAccounts\UserList]
+    "ChangeMe"=dword:00000000 ; Change ChangeMe to the user name you want to hide.
+
 
 Why? ( **Most Important: people talks against Force and torture.**)
 --------
