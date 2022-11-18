@@ -2,6 +2,9 @@
 
 https://github.com/MasoudRahmani/LovePath/tree/master/LovePath_Releases
 
+Magic Key to use app is `F1 + ESC`. 😈😜
+Change in source code if needed and build.
+
 ------------
 
 What is the Idea?
