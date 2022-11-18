@@ -77,7 +77,7 @@ namespace LovePath
                                 {
                                     Console.WriteLine(
                                         "Common: File/Folder has no readable access.\n\t" +
-                                        @"It's recommended (BUILTIN\\Users) has <Read permission> only on Love Folder." +
+                                        @"IT IS GOOD, Only config should have <read permission> access." +
                                         "\n--- Error:" + w.Message);
                                 }
                             }

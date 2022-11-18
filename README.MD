@@ -106,7 +106,11 @@ With
 
  ***3. Encryption - Permission of Config File***
 
- With program premise There is no way to read who is owner of config file or who has permission , Therefore asking for < password and user> multiple time is tedious. currently work around is to add "(BUILTIN\\Users)" and assign "Read Permission" access only. so we could get user name.
+ With program premise There is no way to read who is owner of config file or who has permission , Therefore asking for < password and user> multiple time is tedious. 
+ 
+ Current work around is to add "(BUILTIN\\Users)" and assign "Read Permission" access only. so we could get user name only for config file, Secure Path (LovePath) Should have nothing but user.
+
+ We Get required user to login via config so Secure Path don't nead any other permission.
 
 
 Hopes
