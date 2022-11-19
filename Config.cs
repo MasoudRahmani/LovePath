@@ -129,8 +129,8 @@ namespace LovePath
         private void GetExplorerName()
         {
             Console.Write(
-                "\nExplorer Program Name:" +
-                "Explorer Has to be beside main program");
+                "\n----- Place Explorer beside program ------" +
+                "\nExplorer Name:");
             _xplorerName = @Console.ReadLine();
 
 
