@@ -1,0 +1,25 @@
+
+
+
+bug on restart(sign-out) no access to config cause of encryption
+	-> if we have a successfull run as (like create config again) it works
+	-> minute?
+
+
+buuuuuuuuuuuuuuug -> dispose of impersonation is called -> dont matter
+
+
+
+
+
+
+bug on create no encrypt - parameter is wrong
+
+
+
+
+
+
+
+
+program path think
