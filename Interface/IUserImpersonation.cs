@@ -1,8 +1,15 @@
-﻿namespace LovePath.Interface
+﻿using System;
+
+namespace LovePath.Interface
 {
     public interface IUserImpersonation
     {
-        bool ImpersonateValidUser(string account, string domain, string password);
+        bool ImpersonateValidUser();
+        
+        bool RunImpersonated(Action action);
+
+
+
         void Dispose();
     }
 }

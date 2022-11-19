@@ -1,4 +1,5 @@
 ﻿using LovePath.Interface;
+using Microsoft.Win32.SafeHandles;
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -26,12 +27,11 @@ namespace LovePath
             _user = user;
             _pass = pass;
 
-            Type t = null;
-            _userImpersonationObj = (IUserImpersonation)GetUserImpersonationInstance(impersonationType, ref t);
+            _userImpersonationObj = (IUserImpersonation)GetUserImpersonationInstance(impersonationType);
         }
-        public bool RunImpersonated(Action action)
+        public bool RunImpersonated_Old(Action action)
         {
-            if (_userImpersonationObj.ImpersonateValidUser(_user, _doman, _pass))
+            if (_userImpersonationObj.ImpersonateValidUser())
             {
                 action();
             }
@@ -44,19 +44,20 @@ namespace LovePath
             _userImpersonationObj.Dispose();
             return true;
         }
-
-        public object GetUserImpersonationInstance(ImpersonationType impersonationType, ref Type impType)
+        public bool RunImpersonated(Action action)
         {
-            Type t;
+            return _userImpersonationObj.RunImpersonated(action);
+        }
+        public object GetUserImpersonationInstance(ImpersonationType impersonationType)
+        {
             switch (impersonationType)
             {
                 case ImpersonationType.UserImpersonation:
-                    impType = t = typeof(UserImpersonation);
-                    return Activator.CreateInstance(t);
+                    return new UserImpersonation(_user, _doman, _pass);
 
                 case ImpersonationType.UserImpersonation2:
-                    impType = t = typeof(UserImpersonation2);
-                    return Activator.CreateInstance(t);
+
+                    return new UserImpersonation2(_user, _doman, _pass);
 
                 default:
                     throw new Exception("Invalid Input");
@@ -70,7 +71,7 @@ namespace LovePath
         /// <summary>
         ///  using the Win32 APIs to impersonate
         /// </summary>
-        private class UserImpersonation : IDisposable, Interface.IUserImpersonation
+        private class UserImpersonation : IDisposable, IUserImpersonation
         {
             [DllImport("advapi32.dll")]
             public static extern int LogonUser(string lpszUserName,
@@ -98,20 +99,19 @@ namespace LovePath
             string _userName;
             string _domain;
             string _passWord;
+            IntPtr token = IntPtr.Zero;
+            IntPtr tokenDuplicate = IntPtr.Zero;
 
-            public void Init(string userName, string domain, string passWord)
+            public UserImpersonation(string userName, string domain, string passWord)
             {
                 _userName = userName;
                 _domain = domain;
                 _passWord = passWord;
             }
 
-            public bool ImpersonateValidUser(string account, string domain, string password)
+            public bool ImpersonateValidUser()
             {
-                Init(account, domain, password);
                 WindowsIdentity wi;
-                IntPtr token = IntPtr.Zero;
-                IntPtr tokenDuplicate = IntPtr.Zero;
 
                 if (RevertToSelf())
                 {
@@ -143,7 +143,35 @@ namespace LovePath
                 return false;
             }
 
-            #region IDisposable Members
+            public bool RunImpersonated(Action action)
+            {
+                bool result = false;
+                if (RevertToSelf())
+                {
+                    if (LogonUser(_userName, _domain, _passWord, LOGON32_LOGON_INTERACTIVE,
+                        LOGON32_PROVIDER_DEFAULT, ref token) != 0)
+                    {
+                        if (DuplicateToken(token, 2, ref tokenDuplicate) != 0)
+                        {
+                            // Use the token handle returned by LogonUser.
+                            var newsd = new SafeAccessTokenHandle(tokenDuplicate);
+                            WindowsIdentity.RunImpersonated(newsd, action);
+                            result = true;
+                        }
+                    }
+                }
+                if (token != IntPtr.Zero)
+                {
+                    CloseHandle(token);
+                }
+                if (tokenDuplicate != IntPtr.Zero)
+                {
+                    CloseHandle(tokenDuplicate);
+                }
+
+                return result;
+            }
+
             public void Dispose()
             {
                 if (wic != null)
@@ -152,7 +180,6 @@ namespace LovePath
                 }
                 RevertToSelf();
             }
-            #endregion
         }
 
         /// <summary>
@@ -177,7 +204,7 @@ namespace LovePath
             string _domain;
             string _passWord;
 
-            public void Init(string userName, string domain, string passWord)
+            public UserImpersonation2(string userName, string domain, string passWord)
             {
                 _userName = userName;
                 _domain = domain;
@@ -187,9 +214,8 @@ namespace LovePath
             const int LOGON32_PROVIDER_DEFAULT = 0;
             const int LOGON32_LOGON_INTERACTIVE = 2;
 
-            public bool ImpersonateValidUser(string userName, string domain, string passWord)
+            public bool ImpersonateValidUser()
             {
-                Init(userName, domain, passWord);
                 try
                 {
                     bool returnValue = LogonUser(_userName, _domain, _passWord,
@@ -225,7 +251,44 @@ namespace LovePath
                 }
             }
 
-            #region IDisposable Members
+
+
+            public bool RunImpersonated(Action action)
+            {
+                try
+                {
+                    bool returnValue = LogonUser(_userName, _domain, _passWord,
+                    LOGON32_LOGON_INTERACTIVE, LOGON32_PROVIDER_DEFAULT,
+                    ref tokenHandle);
+
+                    if (false == returnValue)
+                    {
+                        Console.WriteLine("LogonUser failed with error code : {0}", Marshal.GetLastWin32Error());
+                        return false;
+                    }
+
+                    Debug.WriteLine($"Did LogonUser Succeed? {(returnValue ? "Yes" : "No")}");
+                    Debug.WriteLine($"Value of Windows NT token: {tokenHandle}");
+
+                    // Check the identity.
+                    Debug.WriteLine($"Before impersonation: {WindowsIdentity.GetCurrent().Name}");
+
+                    // Use the token handle returned by LogonUser.
+                    var newsd = new SafeAccessTokenHandle(tokenHandle);
+                    WindowsIdentity.RunImpersonated(newsd, action);
+
+                    // Check the identity.
+                    Debug.WriteLine($"After impersonation: {WindowsIdentity.GetCurrent().Name}");
+
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("Exception impersonating user: " + ex.Message);
+                }
+            }
+
+
             public void Dispose()
             {
                 if (wic != null)
@@ -237,9 +300,7 @@ namespace LovePath
                     CloseHandle(tokenHandle);
                 }
             }
-            #endregion
         }
         #endregion
-
     }
 }
