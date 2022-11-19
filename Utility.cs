@@ -24,17 +24,19 @@ namespace LovePath.Util
         public static void WriteEncryptedFile(string path, string data, bool encrypted = false)
         {
             var encrypt = (encrypted) ? FileOptions.Encrypted : FileOptions.WriteThrough;
+            var fs = File.Create(path, 4096, encrypt);
 
-            using (var fs = new FileStream(path, FileMode.Create, FileSystemRights.FullControl, FileShare.Read, 4096, encrypt))
+            using (fs)
             {
                 var byt = Encoding.UTF8.GetBytes(data);
                 fs.Write(byt, 0, byt.Length);
             }
         }
-        
-        public static void WriteTempFile(string path, string data = "No Data." )
+
+        public static void WriteTempFile(string path, string data = "No Data.")
         {
-            using (var fs = new FileStream(path, FileMode.Create,FileSystemRights.FullControl, FileShare.Read,4096,FileOptions.DeleteOnClose))
+            var fs = File.Create(path, 4096, FileOptions.Encrypted);
+            using (fs)
             {
                 var byt = Encoding.UTF8.GetBytes(data);
                 fs.Write(byt, 0, byt.Length);
@@ -48,7 +50,7 @@ namespace LovePath.Util
             System.Reflection.Assembly.GetExecutingAssembly().CreateInstance(strFullyQualifiedName);
 
             //or this
-            Type type = Type.GetType("LovePath."+strFullyQualifiedName);
+            Type type = Type.GetType("LovePath." + strFullyQualifiedName);
             objType = type;
             if (type != null)
                 return Activator.CreateInstance(type);
@@ -58,7 +60,7 @@ namespace LovePath.Util
                 if (type != null)
                     return Activator.CreateInstance(type);
             }
-            
+
             return null;
         }
     }

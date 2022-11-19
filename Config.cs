@@ -77,7 +77,7 @@ namespace LovePath
             if (!File.Exists(ConfigFullPath))
                 CreateConfig();
             else
-                GetConfigSettings();
+                ReadConfig();
 
             if (!File.Exists(ExplorerFullPath))
                 throw new Exception(
@@ -103,7 +103,7 @@ namespace LovePath
             bool done = false;
             do
             {
-                Console.Write($"{FullAccountName} config, Enter ");
+                Console.Write($"\"{FullAccountName}\" config, Enter ");
                 var cnfPassword = ConsoleUtils.GetInputPassword();
 
                 var impersonation = new ImpersonateUser(ImpersonationType.UserImpersonation2, DomainName, User, cnfPassword);
@@ -129,16 +129,19 @@ namespace LovePath
         private void GetExplorerName()
         {
             Console.Write(
-                "\n----- Place Explorer beside program ------" +
+                "\n\tPut <Explorer> in Application Directory" +
                 "\nExplorer Name:");
             _xplorerName = @Console.ReadLine();
 
-
+            if (_xplorerName == ".") _xplorerName = "Explorer++.exe";
             ExplorerFullPath = Path.Combine(ProgramPath, _xplorerName);
-            if (!File.Exists(ExplorerFullPath))
+
+            while (!File.Exists(ExplorerFullPath))
             {
                 Console.Write("\nWrong name!, Agian: ");
                 _xplorerName = @Console.ReadLine();
+
+                ExplorerFullPath = Path.Combine(ProgramPath, _xplorerName);
             }
         }
 
@@ -167,7 +170,7 @@ namespace LovePath
             FullAccountName = $"{DomainName}\\{User}";
         }
 
-        private void GetConfigSettings()
+        private void ReadConfig()
         {
             var rules = SysSecurityUtils.GetFileAccessRule(ConfigFullPath);
             var wellknownacc = SysSecurityUtils.GetWellKnownSidsName();
@@ -193,9 +196,16 @@ namespace LovePath
                 var config_pass = ConsoleUtils.GetInputPassword();
 
                 var impersonate = new ImpersonateUser(ImpersonationType.UserImpersonation2, config_domain, config_user, config_pass);
+
+
+
                 done = impersonate.RunImpersonated(() =>
                 {
-                    var cnf = MySerialization.Deserialize<Config>(new StreamReader(ConfigFullPath).ReadToEnd());
+                    //var h = WindowsIdentity.GetCurrent().Name;
+                    //Console.WriteLine(Environment.UserName);
+                    var json = File.ReadAllText(ConfigFullPath);
+
+                    var cnf = MySerialization.Deserialize<Config>(json);
 
                     if (cnf.User == config_user && cnf.DomainName == config_domain)
                         UseInitialPassword = true; //If config permission had the same user as user in config file we have the password, otherwise we need to ask again.
