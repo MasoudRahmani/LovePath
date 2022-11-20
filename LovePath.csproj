@@ -75,6 +75,7 @@
     <Compile Include="ConsoleUtils.cs" />
     <Compile Include="Interface\IUserImpersonation.cs" />
     <Compile Include="MySerialization.cs" />
+    <Compile Include="Run.cs" />
     <Compile Include="SysSecurityUtils.cs" />
     <Compile Include="UserImpersonation.cs" />
     <Compile Include="Utility.cs" />
