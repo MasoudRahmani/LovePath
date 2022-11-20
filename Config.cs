@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization;
+using System.Security;
 using System.Security.AccessControl;
 using System.Security.Principal;
 
@@ -11,69 +12,129 @@ namespace LovePath
     [DataContract]
     public class Config
     {
-        #region Fields and Property
-        [DataMember]
-        public string ProgramPath = AppDomain.CurrentDomain.BaseDirectory;
-        [DataMember]
-        public string ConfigFileName = "LovePathConfig.json";
-        [DataMember]
-        public string DomainName = Environment.UserDomainName;
-        [DataMember]
-        public string FullAccountName = $"{Environment.UserName}\\{Environment.UserName}";
-        //--------------------------------------------------
+        #region Fields
+        /*-----------------        Used Generaly            --------------- */
+        private string Password;
 
+        public SecureString SecurePassword;
+        public bool UseInitialPassword = false; //If config permission had the same user as user in config file we have the password, otherwise we need to ask again.
+
+        /*-----------------        Used In Property             --------------- */
+        private string _programPath = AppDomain.CurrentDomain.BaseDirectory;
+        private string _domainName = Environment.UserDomainName;
         private string _user = Environment.UserName;
-        private string _xplorerName = "Explorer++.exe";
+        private string _xplorerName = "XY.exe";
+        private string _configFileName = "LoveConfig.json";
         private string _lovePath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+        private List<ConsoleKey> _secret;
+        #endregion
 
+        #region Property
+
+        [DataMember] //If Config file was moved, this is here to check config file and find last path
+        public string ProgramPath { get { return _programPath; } private set { _programPath = value; } }
+        [DataMember]
+        public string DomainName { get { return _domainName; } private set { _domainName = value; } }
         [DataMember]
         public string User
         {
             get => _user;
             set
             {
-                if (string.IsNullOrEmpty(value)) throw new NullReferenceException();
+                if (string.IsNullOrEmpty(value)) throw new ArgumentNullException();
                 else _user = value;
             }
         }
+        [DataMember]
+        public string FullAccountName { get { return $"{_domainName}\\{_user}"; } private set {; } } // from User
         [DataMember]
         public string XplorerName
         {
             get => _xplorerName;
             set
             {
-                if (string.IsNullOrEmpty(value)) throw new NullReferenceException();
-                else _xplorerName = value;
+                if (string.IsNullOrEmpty(value)) throw new ArgumentNullException();
+                if (value == ".") _xplorerName = "Explorer++.exe";
+                else
+                    _xplorerName = value;
             }
         }
+        [DataMember]
+        public string ExplorerFullPath { get { return Path.Combine(_programPath, _xplorerName); } private set {; } }
         [DataMember]
         public string LovePath
         {
             get => _lovePath;
             set
             {
-                if (string.IsNullOrEmpty(value)) throw new NullReferenceException();
+                if (string.IsNullOrEmpty(value)) throw new ArgumentNullException();
                 else _lovePath = value;
             }
 
         }
-        //-------------------------------------------------
+        [DataMember] //If forget how to login - check config
+        public List<ConsoleKey> SecretEntrance
+        {
+            get
+            {
+                if (_secret == null)
+                {
+                    _secret = new List<ConsoleKey>();
+                    _secret.Add(ConsoleKey.F1);
+                    _secret.Add(ConsoleKey.Escape);
+                }
+                return _secret;
+            }
+            set
+            {
+                if (value == null)
+                    _secret = new List<ConsoleKey>();
+                else
+                    _secret = value;
+            }
+        }
 
-        public string ExplorerFullPath; // from init()
-        public string Password;
-        public bool UseInitialPassword = false; //If config permission had the same user as user in config file we have the password, otherwise we need to ask again.
-        public string ConfigFullPath;
-        //-----------------------------------------------
-
+        //------------------------------
+        public string ConfigFileName
+        {
+            get { return _configFileName; }
+            private set
+            {
+                if (string.IsNullOrWhiteSpace(value)) throw new ArgumentNullException();
+                else _configFileName = value;
+            }
+        }
+        public string ConfigFullPath { get { return Path.Combine(_programPath, _configFileName); } private set {; } }
         #endregion
 
         /// <summary>
-        /// If there is no Config file located at Hardoced Destination, will create it otherwise read and initialise.
+        /// Creates a Config with Pre-Defiend Values, Use Initiate() to Set them correctly.
         /// </summary>
-        public void Init()
+        public Config(string configfilename = "")
         {
-            ConfigFullPath = Path.Combine(ProgramPath, ConfigFileName);
+            if (!string.IsNullOrWhiteSpace(configfilename)) ConfigFileName = configfilename;
+        }
 
+        /// <summary>
+        /// Wait until input keys on console matches "SecretEntrance" property.
+        /// </summary>
+        public void WaitForMagicWord()
+        {
+            //Secret Entrance
+            for (int i = 0; i < SecretEntrance.Count;) //all secret has to be used and be in order
+            {
+                var key = Console.ReadKey().Key;
+                Utils.HelpInConsole(key);
+                if (key == SecretEntrance[i]) i++;
+                else i = 0;
+            }
+        }
+
+        /// <summary>
+        /// If there is no Config file located at Hardcoded Destination, will create it otherwise read from config.
+        /// </summary>
+        public void Initiate()
+        {
             if (!File.Exists(ConfigFullPath))
                 CreateConfig();
             else
@@ -85,9 +146,13 @@ namespace LovePath
                     "If you have changed the name, change the name in config too.");
         }
 
-        public void ChangePassword()
+        /// <summary>
+        /// Ask user for password and set/change fields for later use
+        /// </summary>
+        public void GetPassword()
         {
             Password = ConsoleUtils.GetInputPassword();
+            SecurePassword = Utils.ConvertToSecureString(Password);
         }
 
         #region Private Methods
@@ -104,25 +169,73 @@ namespace LovePath
             do
             {
                 Console.Write($"\"{FullAccountName}\" config, Enter ");
-                var cnfPassword = ConsoleUtils.GetInputPassword();
+                GetPassword();
 
-                var impersonation = new ImpersonateUser(ImpersonationType.UserImpersonation2, DomainName, User, cnfPassword);
+                var impersonation = new ImpersonateUser(ImpersonationType.UserImpersonation2, DomainName, User, Password);
                 done = impersonation.RunImpersonated(() =>
                 {
-                    Utils.WriteEncryptedFile(ConfigFullPath, json, false);//encryption has bug. can't read file after restart
-
+                    Utils.WriteFile(ConfigFullPath, json);
                     SysSecurityUtils.ClearFileAccessRule(ConfigFullPath);
 
                     SysSecurityUtils.AllowFileAccessRule(ConfigFullPath, FullAccountName, FileSystemRights.FullControl);
                     SysSecurityUtils.AllowFileAccessRule(ConfigFullPath, WellKnownSidType.BuiltinUsersSid, FileSystemRights.ReadPermissions);
+
+                    //File.Encrypt(ConfigFullPath); //Encrypt after setting access control seems to solve firs time run issue
+
                 });
                 if (done)
-                {
-                    Password = cnfPassword;
                     UseInitialPassword = true;
+                else
+                {
+                    UseInitialPassword = false;
+                    Console.WriteLine("Something went wrong! try again.");
                 }
-                else Console.WriteLine("Something went wrong! try again.");
 
+            } while (!done);
+        }
+
+        private void ReadConfig()
+        {
+            var rules = SysSecurityUtils.GetFileAccessRule(ConfigFullPath);
+            var wellknownacc = SysSecurityUtils.GetWellKnownSidsName();
+            var validUsers = new List<string>();
+
+            foreach (FileSystemAccessRule rule in rules)
+            {
+                var found = wellknownacc.Find(x => x.ToLowerInvariant().Contains(rule.IdentityReference.Value.ToLowerInvariant()));
+                if (string.IsNullOrWhiteSpace(found))
+                {
+                    if (FileSystemRights.FullControl == rule.FileSystemRights)
+                        validUsers.Add(rule.IdentityReference.Value);
+                }
+            }
+            var cFullAccount = validUsers[0].Split('\\');
+            var cDomain = cFullAccount[0];
+            var cUser = cFullAccount[1];
+
+            bool done = false;
+            do
+            {
+                Console.Write($"\"{validUsers[0]}\" config, Enter ");
+                GetPassword();
+
+                var impersonate = new ImpersonateUser(ImpersonationType.UserImpersonation2, cDomain, cUser, Password);
+
+                done = impersonate.RunImpersonated(() =>
+                {
+                    var json = File.ReadAllText(ConfigFullPath);
+                    var cnf = MySerialization.Deserialize<Config>(json);
+
+                    if (cnf.User == cUser && cnf.DomainName == cDomain)
+                        UseInitialPassword = true; //If config permission had the same user as user in config file we have the password, otherwise we need to ask again.
+
+                    DomainName = cnf.DomainName;
+
+                    User = cnf.User;
+                    XplorerName = cnf.XplorerName;
+                    LovePath = cnf.LovePath;
+                });
+                if (!done) Console.WriteLine("Something went wrong! try again.");
             } while (!done);
         }
 
@@ -131,17 +244,12 @@ namespace LovePath
             Console.Write(
                 "\n\tPut <Explorer> in Application Directory" +
                 "\nExplorer Name:");
-            _xplorerName = @Console.ReadLine();
-
-            if (_xplorerName == ".") _xplorerName = "Explorer++.exe";
-            ExplorerFullPath = Path.Combine(ProgramPath, _xplorerName);
+            XplorerName = @Console.ReadLine();
 
             while (!File.Exists(ExplorerFullPath))
             {
                 Console.Write("\nWrong name!, Agian: ");
-                _xplorerName = @Console.ReadLine();
-
-                ExplorerFullPath = Path.Combine(ProgramPath, _xplorerName);
+                XplorerName = @Console.ReadLine();
             }
         }
 
@@ -167,65 +275,12 @@ namespace LovePath
                 Console.Write("\nWrong User!, Again :");
                 User = Console.ReadLine();
             }
-            FullAccountName = $"{DomainName}\\{User}";
         }
 
-        private void ReadConfig()
+        private void GetEntrance()
         {
-            var rules = SysSecurityUtils.GetFileAccessRule(ConfigFullPath);
-            var wellknownacc = SysSecurityUtils.GetWellKnownSidsName();
-            var validUsers = new List<string>();
-
-            foreach (FileSystemAccessRule rule in rules)
-            {
-                var found = wellknownacc.Find(x => x.ToLowerInvariant().Contains(rule.IdentityReference.Value.ToLowerInvariant()));
-                if (string.IsNullOrWhiteSpace(found))
-                {
-                    if (FileSystemRights.FullControl == rule.FileSystemRights)
-                        validUsers.Add(rule.IdentityReference.Value);
-                }
-            }
-            var config_permission = validUsers[0].Split('\\');
-            var config_domain = config_permission[0];
-            var config_user = config_permission[1];
-
-            bool done = false;
-            do
-            {
-                Console.Write($"<{string.Join("\\", config_permission)}> config, Enter ");
-                var config_pass = ConsoleUtils.GetInputPassword();
-
-                var impersonate = new ImpersonateUser(ImpersonationType.UserImpersonation2, config_domain, config_user, config_pass);
-
-
-
-                done = impersonate.RunImpersonated(() =>
-                {
-                    //var h = WindowsIdentity.GetCurrent().Name;
-                    //Console.WriteLine(Environment.UserName);
-                    var json = File.ReadAllText(ConfigFullPath);
-
-                    var cnf = MySerialization.Deserialize<Config>(json);
-
-                    if (cnf.User == config_user && cnf.DomainName == config_domain)
-                        UseInitialPassword = true; //If config permission had the same user as user in config file we have the password, otherwise we need to ask again.
-                    Password = config_pass;
-
-                    ProgramPath = cnf.ProgramPath; //?? why
-                    ConfigFileName = cnf.ConfigFileName; //?? Why
-                    DomainName = cnf.DomainName;
-
-                    User = cnf.User;
-                    XplorerName = cnf.XplorerName;
-                    LovePath = cnf.LovePath;
-
-                    FullAccountName = $"{DomainName}\\{User}";
-                    ExplorerFullPath = Path.Combine(ProgramPath, XplorerName);
-                });
-                if (!done) Console.WriteLine("Something went wrong! try again.");
-            } while (!done);
+            // I have no fucking clue how to read config without getting password - Useless Idea
         }
-
         #endregion
 
 
