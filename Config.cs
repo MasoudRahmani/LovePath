@@ -14,8 +14,6 @@ namespace LovePath
     {
         #region Fields
         /*-----------------        Used Generaly            --------------- */
-        private string Password;
-
         public SecureString SecurePassword;
         public bool UseInitialPassword = false; //If config permission had the same user as user in config file we have the password, otherwise we need to ask again.
 
@@ -151,8 +149,9 @@ namespace LovePath
         /// </summary>
         public void GetPassword()
         {
-            Password = ConsoleUtils.GetInputPassword();
-            SecurePassword = Utils.ConvertToSecureString(Password);
+            var password = ConsoleUtils.GetInputPassword();
+            SecurePassword = Utils.ConvertToSecureString(password);
+            SecurePassword.MakeReadOnly();
         }
 
         #region Private Methods
@@ -171,7 +170,7 @@ namespace LovePath
                 Console.Write($"\"{FullAccountName}\" config, Enter ");
                 GetPassword();
 
-                var impersonation = new ImpersonateUser(ImpersonationType.UserImpersonation2, DomainName, User, Password);
+                var impersonation = new ImpersonateUser(ImpersonationType.UserImpersonation2, DomainName, User, SecurePassword);
                 done = impersonation.RunImpersonated(() =>
                 {
                     Utils.WriteFile(ConfigFullPath, json);
@@ -219,7 +218,7 @@ namespace LovePath
                 Console.Write($"\"{validUsers[0]}\" config, Enter ");
                 GetPassword();
 
-                var impersonate = new ImpersonateUser(ImpersonationType.UserImpersonation2, cDomain, cUser, Password);
+                var impersonate = new ImpersonateUser(ImpersonationType.UserImpersonation2, cDomain, cUser, SecurePassword);
 
                 done = impersonate.RunImpersonated(() =>
                 {
@@ -282,7 +281,6 @@ namespace LovePath
             // I have no fucking clue how to read config without getting password - Useless Idea
         }
         #endregion
-
 
     }
 
