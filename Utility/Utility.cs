@@ -27,13 +27,14 @@ namespace LovePath.Utility
             return plainStr;
         }
 
-        public static void WriteFile(string path, string data)
+        public static void WriteFile(string path, string data, FileOptions fileOptions)
         {
-            var fs = File.Create(path);
-            using (fs)
+            using (var fs = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite, 4096, fileOptions))
             {
-                var byt = Encoding.UTF8.GetBytes(data);
-                fs.Write(byt, 0, byt.Length);
+                using (var sw = new StreamWriter(fs, Encoding.UTF8))
+                {
+                    sw.WriteLine(data);
+                }
             }
         }
         public static void TestTempFile(string data)

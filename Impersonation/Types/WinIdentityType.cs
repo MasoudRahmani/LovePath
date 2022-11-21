@@ -100,6 +100,7 @@ namespace LovePath.Impersonation.Types
 
                 // Use the token handle returned by LogonUser.
                 var newsd = new SafeAccessTokenHandle(tokenHandle);
+
                 WindowsIdentity.RunImpersonated(newsd, action);
 
                 // Check the identity.

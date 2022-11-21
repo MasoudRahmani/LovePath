@@ -174,14 +174,13 @@ namespace LovePath
                 var impersonation = new ImpersonateUser(ImpersonationType.WinIdentity, DomainName, User, SecurePassword);
                 done = impersonation.RunImpersonatedDirectly(() =>
                 {
-                    Utility.Util.WriteFile(ConfigFullPath, json);
+                    //Util.WriteFile(ConfigFullPath, json, FileOptions.Encrypted);
+                    Util.WriteFile(ConfigFullPath, json, FileOptions.WriteThrough);
+
                     SecurityUtil.ClearFileAccessRule(ConfigFullPath);
 
                     SecurityUtil.AllowFileAccessRule(ConfigFullPath, FullAccountName, FileSystemRights.FullControl);
                     SecurityUtil.AllowFileAccessRule(ConfigFullPath, WellKnownSidType.BuiltinUsersSid, FileSystemRights.ReadPermissions);
-
-                    //File.Encrypt(ConfigFullPath); //Encrypt after setting access control seems to solve firs time run issue
-
                 });
                 if (done)
                     UseInitialPassword = true;
@@ -223,6 +222,7 @@ namespace LovePath
 
                 done = impersonate.RunImpersonatedDirectly(() =>
                 {
+                    //FileInfo file = new FileInfo(ConfigFullPath);
                     var json = File.ReadAllText(ConfigFullPath);
                     var cnf = SerializationUtil.Deserialize<Config>(json);
 
