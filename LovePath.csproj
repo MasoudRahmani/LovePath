@@ -52,7 +52,7 @@
     </StartupObject>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>I´s Pure 2.ico</ApplicationIcon>
+    <ApplicationIcon>Resource\I´s Pure 2.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -72,21 +72,23 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Config.cs" />
-    <Compile Include="ConsoleUtils.cs" />
-    <Compile Include="Interface\IUserImpersonation.cs" />
-    <Compile Include="MySerialization.cs" />
-    <Compile Include="Run.cs" />
-    <Compile Include="SysSecurityUtils.cs" />
-    <Compile Include="UserImpersonation.cs" />
-    <Compile Include="Utility.cs" />
+    <Compile Include="Impersonation\Types\Win32Type.cs" />
+    <Compile Include="Impersonation\Types\WinIdentityType.cs" />
+    <Compile Include="Utility\ConsoleUtil.cs" />
+    <Compile Include="Impersonation\Interface\IUserImpersonation.cs" />
+    <Compile Include="Utility\SerializationUtil.cs" />
+    <Compile Include="Utility\RunUtil.cs" />
+    <Compile Include="Utility\SecurityUtil.cs" />
+    <Compile Include="Impersonation\ImpersonateUser.cs" />
+    <Compile Include="Utility\Utility.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
+    <None Include="Resource\App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="I´s Pure 2.ico" />
+    <Content Include="Resource\I´s Pure 2.ico" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">

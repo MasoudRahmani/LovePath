@@ -1,4 +1,4 @@
-﻿using LovePath.Util;
+﻿using LovePath.Utility;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -6,6 +6,7 @@ using System.Runtime.Serialization;
 using System.Security;
 using System.Security.AccessControl;
 using System.Security.Principal;
+using LovePath.Impersonation;
 
 namespace LovePath
 {
@@ -122,7 +123,7 @@ namespace LovePath
             for (int i = 0; i < SecretEntrance.Count;) //all secret has to be used and be in order
             {
                 var key = Console.ReadKey().Key;
-                Utils.HelpInConsole(key);
+                Utility.Util.HelpInConsole(key);
                 if (key == SecretEntrance[i]) i++;
                 else i = 0;
             }
@@ -149,8 +150,8 @@ namespace LovePath
         /// </summary>
         public void GetPassword()
         {
-            var password = ConsoleUtils.GetInputPassword();
-            SecurePassword = Utils.ConvertToSecureString(password);
+            var password = ConsoleUtil.GetInputPassword();
+            SecurePassword = Utility.Util.ConvertToSecureString(password);
             SecurePassword.MakeReadOnly();
         }
 
@@ -162,7 +163,7 @@ namespace LovePath
             GetLovePath();
             GetExplorerName();
 
-            var json = MySerialization.Serialize(this);
+            var json = SerializationUtil.Serialize(this);
 
             bool done = false;
             do
@@ -170,14 +171,14 @@ namespace LovePath
                 Console.Write($"\"{FullAccountName}\" config, Enter ");
                 GetPassword();
 
-                var impersonation = new ImpersonateUser(ImpersonationType.UserImpersonation2, DomainName, User, SecurePassword);
-                done = impersonation.RunImpersonated(() =>
+                var impersonation = new ImpersonateUser(ImpersonationType.WinIdentity, DomainName, User, SecurePassword);
+                done = impersonation.RunImpersonatedDirectly(() =>
                 {
-                    Utils.WriteFile(ConfigFullPath, json);
-                    SysSecurityUtils.ClearFileAccessRule(ConfigFullPath);
+                    Utility.Util.WriteFile(ConfigFullPath, json);
+                    SecurityUtil.ClearFileAccessRule(ConfigFullPath);
 
-                    SysSecurityUtils.AllowFileAccessRule(ConfigFullPath, FullAccountName, FileSystemRights.FullControl);
-                    SysSecurityUtils.AllowFileAccessRule(ConfigFullPath, WellKnownSidType.BuiltinUsersSid, FileSystemRights.ReadPermissions);
+                    SecurityUtil.AllowFileAccessRule(ConfigFullPath, FullAccountName, FileSystemRights.FullControl);
+                    SecurityUtil.AllowFileAccessRule(ConfigFullPath, WellKnownSidType.BuiltinUsersSid, FileSystemRights.ReadPermissions);
 
                     //File.Encrypt(ConfigFullPath); //Encrypt after setting access control seems to solve firs time run issue
 
@@ -195,8 +196,8 @@ namespace LovePath
 
         private void ReadConfig()
         {
-            var rules = SysSecurityUtils.GetFileAccessRule(ConfigFullPath);
-            var wellknownacc = SysSecurityUtils.GetWellKnownSidsName();
+            var rules = SecurityUtil.GetFileAccessRule(ConfigFullPath);
+            var wellknownacc = SecurityUtil.GetWellKnownSidsName();
             var validUsers = new List<string>();
 
             foreach (FileSystemAccessRule rule in rules)
@@ -218,12 +219,12 @@ namespace LovePath
                 Console.Write($"\"{validUsers[0]}\" config, Enter ");
                 GetPassword();
 
-                var impersonate = new ImpersonateUser(ImpersonationType.UserImpersonation2, cDomain, cUser, SecurePassword);
+                var impersonate = new ImpersonateUser(ImpersonationType.Win32, cDomain, cUser, SecurePassword);
 
-                done = impersonate.RunImpersonated(() =>
+                done = impersonate.RunImpersonatedDirectly(() =>
                 {
                     var json = File.ReadAllText(ConfigFullPath);
-                    var cnf = MySerialization.Deserialize<Config>(json);
+                    var cnf = SerializationUtil.Deserialize<Config>(json);
 
                     if (cnf.User == cUser && cnf.DomainName == cDomain)
                         UseInitialPassword = true; //If config permission had the same user as user in config file we have the password, otherwise we need to ask again.
@@ -269,7 +270,7 @@ namespace LovePath
             Console.Write("(No Domain) Just User:");
             User = Console.ReadLine();
 
-            while (!SysSecurityUtils.AccountExists(User))
+            while (!SecurityUtil.AccountExists(User))
             {
                 Console.Write("\nWrong User!, Again :");
                 User = Console.ReadLine();

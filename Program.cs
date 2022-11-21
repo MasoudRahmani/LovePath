@@ -1,8 +1,10 @@
 ﻿using System;
-using LovePath.Util;
+using LovePath.Utility;
 using System.Threading;
 using System.Security.AccessControl;
 using System.Collections.Generic;
+using System.Reflection;
+using System.IO;
 
 //bug of saving config and reading config ( with encryption enabled )
 // how to to read secret enterance from config
@@ -25,14 +27,13 @@ namespace LovePath
                     Console.ReadKey();
                     return;
                 }
-
                 SetConsoleSettings();
 
                 OpenSasemi();
             }
             catch (Exception w)
             {
-                Utils.ShowExit(w.Message);
+                Util.ShowExit(w.Message);
             }
             finally
             {
@@ -55,34 +56,34 @@ namespace LovePath
         {
             List<string> userWithAccess = GetLovePathValidAccessUsers(cnf.LovePath);
 
-            if (userWithAccess == null) ;// "Good"
+            if (userWithAccess == null) System.Diagnostics.Debug.WriteLine("Love Path Access is Good");// "Good" 
 
             if (cnf.UseInitialPassword == false)
                 cnf.GetPassword();
 
             try
             {
-                var result = Run.RunasProcess_API(cnf.ExplorerFullPath, cnf.LovePath, cnf.User, cnf.SecurePassword);
+                var result = RunUtil.RunasProcess_API(cnf.ExplorerFullPath, cnf.LovePath, cnf.User, cnf.SecurePassword);
 
-                if (result) Utils.ShowExit("Process Started!");
-                else Utils.ShowExit("Process Failed to Start!!");
+                if (result) Utility.Util.ShowExit("Process Started!");
+                else Utility.Util.ShowExit("Process Failed to Start!!");
             }
             catch (Exception e)
             {
                 if (e.Message.Contains("password"))
                     cnf.UseInitialPassword = false;
-                Utils.ShowExit(e.Message);
+                Utility.Util.ShowExit(e.Message);
             }
         }
 
         private static List<string> GetLovePathValidAccessUsers(string LovePath)
         {
             var authorizedUsers = new List<string>();
-            var machineDefaultAccount = SysSecurityUtils.GetWellKnownSidsName();
+            var machineDefaultAccount = SecurityUtil.GetWellKnownSidsName();
 
             try
             {
-                var rules = SysSecurityUtils.GetFileAccessRule(LovePath);
+                var rules = SecurityUtil.GetFileAccessRule(LovePath);
                 foreach (AuthorizationRule rule in rules)
                 {
                     var found = machineDefaultAccount.Find(x => x.ToLowerInvariant().Contains(rule.IdentityReference.Value.ToLowerInvariant()));
@@ -119,7 +120,7 @@ namespace LovePath
 
         private static void SetConsoleSettings()
         {
-            ConsoleUtils.CenterConsole();
+            ConsoleUtil.CenterConsole();
 
             Console.Title = "LovePath";
             Console.BackgroundColor = ConsoleColor.Red;

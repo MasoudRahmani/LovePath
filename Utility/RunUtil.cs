@@ -4,7 +4,7 @@ using System.Security;
 
 namespace LovePath
 {
-    static class Run
+    static class RunUtil
     {
 
         public static bool RunasProcess_API(string filename, string arg, string user_noDomain, SecureString pass)

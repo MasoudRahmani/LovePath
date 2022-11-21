@@ -6,9 +6,9 @@ using System.Management;
 using System.Security.AccessControl;
 using System.Security.Principal;
 
-namespace LovePath.Util
+namespace LovePath.Utility
 {
-    public static class SysSecurityUtils
+    public static class SecurityUtil
     {
         public static string TranslateSid(SecurityIdentifier securityIdentifier)
         {

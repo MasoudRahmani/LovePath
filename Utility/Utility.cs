@@ -1,13 +1,12 @@
 ﻿using System;
 using System.IO;
 using System.Security;
-using System.Security.AccessControl;
 using System.Text;
 
-namespace LovePath.Util
+namespace LovePath.Utility
 {
 
-    public static class Utils
+    public static class Util
     {
         public static SecureString ConvertToSecureString(string password)
         {
@@ -107,13 +106,9 @@ namespace LovePath.Util
 
 
         //https://stackoverflow.com/questions/223952/create-an-instance-of-a-class-from-a-string
-        private static object GetClassInstanceOfTypeName(string strFullyQualifiedName, ref Type objType)
-        {/* Something wrong*/
-            //this
-            System.Reflection.Assembly.GetExecutingAssembly().CreateInstance(strFullyQualifiedName);
-
-            //or this
-            Type type = Type.GetType("LovePath." + strFullyQualifiedName);
+        public static object GetInstanceofType(string strFullyQualifiedName, ref Type objType)
+        {
+            Type type = Type.GetType(strFullyQualifiedName);
             objType = type;
             if (type != null)
                 return Activator.CreateInstance(type);
@@ -124,7 +119,13 @@ namespace LovePath.Util
                     return Activator.CreateInstance(type);
             }
 
-            return null;
+            throw new NullReferenceException();
+        }
+        public static object GetInstanceofType2(string strFullyQualifiedName)
+        {
+            var result = System.Reflection.Assembly.GetExecutingAssembly().CreateInstance(strFullyQualifiedName);
+            if (result == null) throw new NullReferenceException();
+            return result;
         }
     }
 

@@ -4,9 +4,9 @@ using System.Linq;
 using System.Runtime.Serialization.Json;
 using System.Text;
 
-namespace LovePath.Util
+namespace LovePath.Utility
 {
-    public static class MySerialization
+    public static class SerializationUtil
     {
 
         public static string Serialize_notFormatted<T>(T Obj)

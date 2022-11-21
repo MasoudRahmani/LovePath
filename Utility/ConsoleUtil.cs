@@ -5,10 +5,10 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
 
-namespace LovePath.Util
+namespace LovePath.Utility
 {
 
-    public static class ConsoleUtils
+    public static class ConsoleUtil
     {
         // P/Invoke declarations Center
         private struct RECT { public int left, top, right, bottom; }
