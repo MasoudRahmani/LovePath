@@ -3,6 +3,7 @@ using Microsoft.Win32.SafeHandles;
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Security;
 using System.Security.Principal;
 
 namespace LovePath
@@ -18,10 +19,10 @@ namespace LovePath
     {
         private string _doman;
         private string _user;
-        private string _pass;
+        private SecureString _pass;
         private IUserImpersonation _userImpersonationObj;
 
-        public ImpersonateUser(ImpersonationType impersonationType, string domain, string user, string pass)
+        public ImpersonateUser(ImpersonationType impersonationType, string domain, string user, SecureString pass)
         {
             _doman = domain;
             _user = user;
@@ -73,13 +74,10 @@ namespace LovePath
         /// </summary>
         private class UserImpersonation : IDisposable, IUserImpersonation
         {
-            [DllImport("advapi32.dll")]
-            public static extern int LogonUser(string lpszUserName,
-                string lpszDomain,
-                string lpszPassword,
-                int dwLogonType,
-                int dwLogonProvider,
-                ref IntPtr phToken);
+            // Define the Windows LogonUser and CloseHandle functions.
+            [DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+            internal static extern bool LogonUser(String username, String domain, IntPtr password,
+                    int logonType, int logonProvider, ref IntPtr token);
 
             [DllImport("advapi32.dll", CharSet = CharSet.Auto, SetLastError = true)]
             public static extern int DuplicateToken(IntPtr hToken,
@@ -98,15 +96,16 @@ namespace LovePath
             WindowsImpersonationContext wic;
             string _userName;
             string _domain;
-            string _passWord;
+            IntPtr _passwordPtr;
             IntPtr token = IntPtr.Zero;
             IntPtr tokenDuplicate = IntPtr.Zero;
 
-            public UserImpersonation(string userName, string domain, string passWord)
+            public UserImpersonation(string userName, string domain, SecureString passWord)
             {
                 _userName = userName;
                 _domain = domain;
-                _passWord = passWord;
+                // Marshal the SecureString to unmanaged memory.
+                _passwordPtr = Marshal.SecureStringToGlobalAllocUnicode(passWord);
             }
 
             public bool ImpersonateValidUser()
@@ -115,8 +114,8 @@ namespace LovePath
 
                 if (RevertToSelf())
                 {
-                    if (LogonUser(_userName, _domain, _passWord, LOGON32_LOGON_INTERACTIVE,
-                        LOGON32_PROVIDER_DEFAULT, ref token) != 0)
+                    if (LogonUser(_userName, _domain, _passwordPtr, LOGON32_LOGON_INTERACTIVE,
+                        LOGON32_PROVIDER_DEFAULT, ref token) != false)
                     {
                         if (DuplicateToken(token, 2, ref tokenDuplicate) != 0)
                         {
@@ -148,8 +147,8 @@ namespace LovePath
                 bool result = false;
                 if (RevertToSelf())
                 {
-                    if (LogonUser(_userName, _domain, _passWord, LOGON32_LOGON_INTERACTIVE,
-                        LOGON32_PROVIDER_DEFAULT, ref token) != 0)
+                    if (LogonUser(_userName, _domain, _passwordPtr, LOGON32_LOGON_INTERACTIVE,
+                        LOGON32_PROVIDER_DEFAULT, ref token))
                     {
                         if (DuplicateToken(token, 2, ref tokenDuplicate) != 0)
                         {
@@ -174,6 +173,9 @@ namespace LovePath
 
             public void Dispose()
             {
+                // Perform cleanup whether or not the call succeeded.
+                // Zero-out and free the unmanaged string reference.
+                Marshal.ZeroFreeGlobalAllocUnicode(_passwordPtr);
                 if (wic != null)
                 {
                     wic.Dispose();
@@ -185,15 +187,20 @@ namespace LovePath
         /// <summary>
         ///  using the WindowsIdentity class to impersonate
         /// </summary>
-        private class UserImpersonation2 : IDisposable, Interface.IUserImpersonation
+        private class UserImpersonation2 : IDisposable, IUserImpersonation
         {
-            [DllImport("advapi32.dll")]
-            public static extern bool LogonUser(String lpszUserName,
-                String lpszDomain,
-                String lpszPassword,
-                int dwLogonType,
-                int dwLogonProvider,
-                ref IntPtr phToken);
+            // Define the Windows LogonUser and CloseHandle functions.
+            [DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+            internal static extern bool LogonUser(String username, String domain, IntPtr password,
+                    int logonType, int logonProvider, ref IntPtr token);
+
+            //[DllImport("advapi32.dll")]
+            //public static extern bool LogonUser(String lpszUserName,
+            //    String lpszDomain,
+            //    String lpszPassword,
+            //    int dwLogonType,
+            //    int dwLogonProvider,
+            //    ref IntPtr phToken);
 
             [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
             public static extern bool CloseHandle(IntPtr handle);
@@ -202,13 +209,14 @@ namespace LovePath
             IntPtr tokenHandle;
             string _userName;
             string _domain;
-            string _passWord;
+            IntPtr _passwordPtr;
 
-            public UserImpersonation2(string userName, string domain, string passWord)
+            public UserImpersonation2(string userName, string domain, SecureString passWord)
             {
                 _userName = userName;
                 _domain = domain;
-                _passWord = passWord;
+                // Marshal the SecureString to unmanaged memory.
+                _passwordPtr = Marshal.SecureStringToGlobalAllocUnicode(passWord);
             }
 
             const int LOGON32_PROVIDER_DEFAULT = 0;
@@ -218,7 +226,7 @@ namespace LovePath
             {
                 try
                 {
-                    bool returnValue = LogonUser(_userName, _domain, _passWord,
+                    bool returnValue = LogonUser(_userName, _domain, _passwordPtr,
                     LOGON32_LOGON_INTERACTIVE, LOGON32_PROVIDER_DEFAULT,
                     ref tokenHandle);
 
@@ -251,13 +259,11 @@ namespace LovePath
                 }
             }
 
-
-
             public bool RunImpersonated(Action action)
             {
                 try
                 {
-                    bool returnValue = LogonUser(_userName, _domain, _passWord,
+                    bool returnValue = LogonUser(_userName, _domain, _passwordPtr,
                     LOGON32_LOGON_INTERACTIVE, LOGON32_PROVIDER_DEFAULT,
                     ref tokenHandle);
 
@@ -288,9 +294,12 @@ namespace LovePath
                 }
             }
 
-
             public void Dispose()
             {
+                // Perform cleanup whether or not the call succeeded.
+                // Zero-out and free the unmanaged string reference.
+                Marshal.ZeroFreeGlobalAllocUnicode(_passwordPtr);
+
                 if (wic != null)
                 {
                     wic.Undo();
