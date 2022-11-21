@@ -49,7 +49,7 @@ namespace LovePath.Utility
             return sids;
         }
 
-        public static List<string> GetMachineUsers()
+        public static List<string> GetHumanUsers()
         {
             var localUsers = new List<string>();
             SelectQuery query = new SelectQuery("Win32_UserAccount");
@@ -129,6 +129,40 @@ namespace LovePath.Utility
                 fs.RemoveAccessRule(rule);
 
             File.SetAccessControl(filePath, fs);
+        }
+
+        public static List<string> GetUsersWithAccessOnFile(string path)
+        {
+            var rules = SecurityUtil.GetFileAccessRule(path);
+            var validUsers = new List<string>();
+            var humanUsers = SecurityUtil.GetHumanUsers();
+            foreach (FileSystemAccessRule rule in rules)
+            {
+                var found = humanUsers.Find(x => x.Contains(rule.IdentityReference.Value.Split('\\')[1]));
+                if (!string.IsNullOrWhiteSpace(found))
+                {
+                    if (FileSystemRights.FullControl == rule.FileSystemRights)
+                        validUsers.Add(rule.IdentityReference.Value);
+                }
+            }
+            return validUsers;
+        }
+
+        public static List<string> GetUsersWithAccessOnFile_slow(string path)
+        {
+            var rules = SecurityUtil.GetFileAccessRule(path);
+            var validUsers = new List<string>();
+            var wellknownacc = SecurityUtil.GetWellKnownSidsName();
+            foreach (FileSystemAccessRule rule in rules)
+            {
+                var found = wellknownacc.Find(x => x.ToLowerInvariant().Contains(rule.IdentityReference.Value.ToLowerInvariant()));
+                if (string.IsNullOrWhiteSpace(found))
+                {
+                    if (FileSystemRights.FullControl == rule.FileSystemRights)
+                        validUsers.Add(rule.IdentityReference.Value);
+                }
+            }
+            return validUsers;
         }
 
     }

@@ -66,7 +66,6 @@ namespace LovePath.Impersonation.Types
                 // Use the token handle returned by LogonUser.
                 var newId = new WindowsIdentity(tokenHandle);
                 wic = newId.Impersonate();
-
                 // Check the identity.
                 Debug.WriteLine($"After impersonation: {WindowsIdentity.GetCurrent().Name}");
 
@@ -95,16 +94,9 @@ namespace LovePath.Impersonation.Types
                 Debug.WriteLine($"Did LogonUser Succeed? {(returnValue ? "Yes" : "No")}");
                 Debug.WriteLine($"Value of Windows NT token: {tokenHandle}");
 
-                // Check the identity.
-                Debug.WriteLine($"Before impersonation: {WindowsIdentity.GetCurrent().Name}");
-
                 // Use the token handle returned by LogonUser.
                 var newsd = new SafeAccessTokenHandle(tokenHandle);
-
                 WindowsIdentity.RunImpersonated(newsd, action);
-
-                // Check the identity.
-                Debug.WriteLine($"After impersonation: {WindowsIdentity.GetCurrent().Name}");
 
                 return true;
             }
