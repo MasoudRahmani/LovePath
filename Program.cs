@@ -13,7 +13,7 @@ namespace LovePath
 {
     class Program
     {
-        static Mutex mutex = new Mutex(true, "Lovely Path Explorer - Masoud Dono for redemption - :)");
+        static Mutex mutex = new Mutex(true, "LovePath Explorer, Masoud Dono in redemption");
 
         [STAThread]
         static void Main(string[] args)
@@ -50,6 +50,7 @@ namespace LovePath
             cnf.Initiate();
 
             Start(cnf);
+
         }
 
         private static void Start(Config cnf)
@@ -65,44 +66,34 @@ namespace LovePath
             {
                 var result = RunUtil.RunasProcess_API(cnf.ExplorerFullPath, cnf.LovePath, cnf.User, cnf.SecurePassword);
 
-                if (result) Utility.Util.ShowExit("Process Started!");
-                else Utility.Util.ShowExit("Process Failed to Start!!");
+                if (result) return;
+                else Util.ShowExit("Process Failed to Start!!");
             }
             catch (Exception e)
             {
                 if (e.Message.Contains("password"))
                     cnf.UseInitialPassword = false;
-                Utility.Util.ShowExit(e.Message);
+                Util.ShowExit(e.Message);
             }
         }
 
         private static List<string> GetLovePathValidAccessUsers(string LovePath)
         {
-            var authorizedUsers = new List<string>();
-            var machineDefaultAccount = SecurityUtil.GetWellKnownSidsName();
-
             try
             {
-                var rules = SecurityUtil.GetFileAccessRule(LovePath);
-                foreach (AuthorizationRule rule in rules)
-                {
-                    var found = machineDefaultAccount.Find(x => x.ToLowerInvariant().Contains(rule.IdentityReference.Value.ToLowerInvariant()));
-                    //Not contain
-                    if (string.IsNullOrWhiteSpace(found))
-                        authorizedUsers.Add(rule.IdentityReference.ToString());
-                }
+                List<string> authorizedUsers = SecurityUtil.GetUsersWithAccessOnFile(LovePath);
 
                 if (authorizedUsers.Count == 0)
                 {
-                    Console.WriteLine("Permission to read Access Control is denied. Guess Correct User.");
+                    Console.WriteLine("No human account on path.");
                 }
                 else if (authorizedUsers.Count == 1)
                 {
-                    Console.WriteLine($"LovePath VALID User: {authorizedUsers[0]}");
+                    Console.WriteLine($"Possible Valid User: {authorizedUsers[0]}");
                 }
                 else
                     Console.WriteLine(
-                        $"Love Path NOT valid OR Changed Permission.\n" +
+                        $"Path NOT valid OR Changed Permission.\n" +
                         $"Possible Users:\n" +
                         $"\t{string.Join("\n\t", authorizedUsers) }"
                         );
@@ -111,8 +102,7 @@ namespace LovePath
             catch (Exception w)
             {
                 Console.WriteLine(
-                    "Common: File/Folder has no readable access.\n\t" +
-                    @"IT IS GOOD, Only config should have <read permission> access." +
+                    "Common: File/Folder has no readable access. Good!\n" +
                     "\n--- Error:" + w.Message);
                 return null;
             }
@@ -130,10 +120,5 @@ namespace LovePath
             Console.Clear();
         }
 
-
-
-
     }
-
-
 }

@@ -171,43 +171,33 @@ namespace LovePath
                 Console.Write($"\"{FullAccountName}\" config, Enter ");
                 GetPassword();
 
-                var impersonation = new ImpersonateUser(ImpersonationType.WinIdentity, DomainName, User, SecurePassword);
-                done = impersonation.RunImpersonatedDirectly(() =>
+                using (var impersonation = new ImpersonateUser(ImpersonationType.WinIdentity, DomainName, User, SecurePassword))
                 {
-                    //Util.WriteFile(ConfigFullPath, json, FileOptions.Encrypted);
-                    Util.WriteFile(ConfigFullPath, json, FileOptions.WriteThrough);
+                    done = impersonation.RunImpersonated(() =>
+                      {
+                          //Util.WriteFile(ConfigFullPath, json, FileOptions.Encrypted);
+                          Util.WriteFile(ConfigFullPath, json, FileOptions.WriteThrough);
 
-                    SecurityUtil.ClearFileAccessRule(ConfigFullPath);
+                          SecurityUtil.ClearFileAccessRule(ConfigFullPath);
 
-                    SecurityUtil.AllowFileAccessRule(ConfigFullPath, FullAccountName, FileSystemRights.FullControl);
-                    SecurityUtil.AllowFileAccessRule(ConfigFullPath, WellKnownSidType.BuiltinUsersSid, FileSystemRights.ReadPermissions);
-                });
-                if (done)
-                    UseInitialPassword = true;
-                else
-                {
-                    UseInitialPassword = false;
-                    Console.WriteLine("Something went wrong! try again.");
+                          SecurityUtil.AllowFileAccessRule(ConfigFullPath, FullAccountName, FileSystemRights.FullControl);
+                          SecurityUtil.AllowFileAccessRule(ConfigFullPath, WellKnownSidType.BuiltinUsersSid, FileSystemRights.ReadPermissions);
+                      });
+                    if (done)
+                        UseInitialPassword = true;
+                    else
+                    {
+                        UseInitialPassword = false;
+                        Console.WriteLine("Something went wrong! try again.");
+                    }
                 }
-
             } while (!done);
         }
 
         private void ReadConfig()
         {
-            var rules = SecurityUtil.GetFileAccessRule(ConfigFullPath);
-            var wellknownacc = SecurityUtil.GetWellKnownSidsName();
-            var validUsers = new List<string>();
+            List<string> validUsers = SecurityUtil.GetUsersWithAccessOnFile(ConfigFullPath);
 
-            foreach (FileSystemAccessRule rule in rules)
-            {
-                var found = wellknownacc.Find(x => x.ToLowerInvariant().Contains(rule.IdentityReference.Value.ToLowerInvariant()));
-                if (string.IsNullOrWhiteSpace(found))
-                {
-                    if (FileSystemRights.FullControl == rule.FileSystemRights)
-                        validUsers.Add(rule.IdentityReference.Value);
-                }
-            }
             var cFullAccount = validUsers[0].Split('\\');
             var cDomain = cFullAccount[0];
             var cUser = cFullAccount[1];
@@ -218,24 +208,25 @@ namespace LovePath
                 Console.Write($"\"{validUsers[0]}\" config, Enter ");
                 GetPassword();
 
-                var impersonate = new ImpersonateUser(ImpersonationType.Win32, cDomain, cUser, SecurePassword);
-
-                done = impersonate.RunImpersonatedDirectly(() =>
+                using (var impersonate = new ImpersonateUser(ImpersonationType.Win32, cDomain, cUser, SecurePassword))
                 {
-                    //FileInfo file = new FileInfo(ConfigFullPath);
-                    var json = File.ReadAllText(ConfigFullPath);
-                    var cnf = SerializationUtil.Deserialize<Config>(json);
+                    done = impersonate.RunImpersonated(() =>
+                    {
+                        //FileInfo file = new FileInfo(ConfigFullPath);
+                        var json = File.ReadAllText(ConfigFullPath);
+                        var cnf = SerializationUtil.Deserialize<Config>(json);
 
-                    if (cnf.User == cUser && cnf.DomainName == cDomain)
-                        UseInitialPassword = true; //If config permission had the same user as user in config file we have the password, otherwise we need to ask again.
+                        if (cnf.User == cUser && cnf.DomainName == cDomain)
+                            UseInitialPassword = true; //If config permission had the same user as user in config file we have the password, otherwise we need to ask again.
 
-                    DomainName = cnf.DomainName;
+                        DomainName = cnf.DomainName;
 
-                    User = cnf.User;
-                    XplorerName = cnf.XplorerName;
-                    LovePath = cnf.LovePath;
-                });
-                if (!done) Console.WriteLine("Something went wrong! try again.");
+                        User = cnf.User;
+                        XplorerName = cnf.XplorerName;
+                        LovePath = cnf.LovePath;
+                    });
+                    if (!done) Console.WriteLine("Something went wrong! try again.");
+                }
             } while (!done);
         }
 
