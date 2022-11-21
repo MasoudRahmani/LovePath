@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Security;
+using System.Security.AccessControl;
 using System.Text;
 
 namespace LovePath.Utility
@@ -29,7 +30,8 @@ namespace LovePath.Utility
 
         public static void WriteFile(string path, string data, FileOptions fileOptions)
         {
-            using (var fs = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite, 4096, fileOptions))
+            /*FileSystemRights -> very imprtant*/
+            using (var fs = new FileStream(path, FileMode.OpenOrCreate, FileSystemRights.FullControl, FileShare.ReadWrite, 4096, fileOptions))
             {
                 using (var sw = new StreamWriter(fs, Encoding.UTF8))
                 {
