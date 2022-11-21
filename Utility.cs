@@ -20,6 +20,13 @@ namespace LovePath.Util
             }
             return securePass;
         }
+        // convert a secure string into a normal plain text string
+        public static string ConvertToPlainString(this SecureString secureStr)
+        {
+            string plainStr = new System.Net.NetworkCredential(string.Empty,
+                              secureStr).Password;
+            return plainStr;
+        }
 
         public static void WriteFile(string path, string data)
         {
