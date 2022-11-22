@@ -74,7 +74,7 @@ namespace LovePath.Utility
             if (key == ConsoleKey.Z) Environment.Exit(0);
             if (key == ConsoleKey.Y) Restart();
 
-            Console.Clear();
+            ShowExit();
         }
         private static void Restart()
         {
