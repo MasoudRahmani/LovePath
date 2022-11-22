@@ -1,13 +1,10 @@
 ﻿using System;
 using LovePath.Utility;
 using System.Threading;
-using System.Security.AccessControl;
 using System.Collections.Generic;
-using System.Reflection;
 using System.IO;
 
 //bug of saving config and reading config ( with encryption enabled )
-// how to to read secret enterance from config
 
 namespace LovePath
 {
@@ -51,16 +48,27 @@ namespace LovePath
 
             Start(cnf);
 
+            var imp = new Impersonation.ImpersonateUser(ImpersonationType.Win32, cnf.Domain, cnf.User, cnf.SecurePassword);
+            imp.RunImpersonatedValidUser(() =>
+            {
+                if (Util.IsWindowsEncrypted(cnf.ConfigFullPath)) ;
+                else
+                    ;//File.Encrypt(cnf.ConfigFullPath);
+            });
         }
 
         private static void Start(Config cnf)
         {
-            List<string> userWithAccess = GetLovePathValidAccessUsers(cnf.LovePath);
-
-            if (userWithAccess == null) System.Diagnostics.Debug.WriteLine("Love Path Access is Good");// "Good" 
+            if (!File.Exists(cnf.ExplorerFullPath))
+                Util.ShowExit(
+                    "Explorer Not found!\nPlace Explorer beside main program.\n" +
+                    "If you changed xplorer name, change config too.");
 
             if (cnf.UseInitialPassword == false)
-                cnf.GetPassword();
+            {
+                //ShowLovePathPossibleUsers(cnf.LovePath);
+                cnf.GetPassword(cnf.User);
+            }
 
             try
             {
@@ -72,12 +80,15 @@ namespace LovePath
             catch (Exception e)
             {
                 if (e.Message.Contains("password"))
+                {
                     cnf.UseInitialPassword = false;
+                    Start(cnf);
+                }
                 Util.ShowExit(e.Message);
             }
         }
 
-        private static List<string> GetLovePathValidAccessUsers(string LovePath)
+        private static void ShowLovePathPossibleUsers(string LovePath)
         {
             try
             {
@@ -97,15 +108,17 @@ namespace LovePath
                         $"Possible Users:\n" +
                         $"\t{string.Join("\n\t", authorizedUsers) }"
                         );
-                return authorizedUsers;
             }
             catch (Exception w)
             {
                 Console.WriteLine(
                     "Common: File/Folder has no readable access. Good!\n" +
                     "\n--- Error:" + w.Message);
-                return null;
             }
+
+            //TODO:
+            //Console.WriteLine("Change User");
+            //get user
         }
 
         private static void SetConsoleSettings()
