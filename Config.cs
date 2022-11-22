@@ -150,7 +150,7 @@ namespace LovePath
             {
                 Console.WriteLine("Reading Config Failed!! Continue with uncertain config? (Y/N): ");
                 if (Console.ReadKey().Key == ConsoleKey.Y)
-                    return;
+                { Console.WriteLine(); return; }
                 else Util.ShowExit("Done.");
             }
         }
@@ -179,7 +179,7 @@ namespace LovePath
 
         public void GetPassword(string forUser)
         {
-            Console.Write($"\n\"{forUser}\" User, Enter ");
+            Console.Write($"\"{forUser}\" User, Enter ");
             var password = ConsoleUtil.GetInputPassword();
 
             SecurePassword = new SecureString();
@@ -195,23 +195,32 @@ namespace LovePath
             var json = SerializationUtil.Serialize(this);
 
             bool done = false;
+            ImpersonateUser impersonate = null;
 
-            using (var impersonation = new ImpersonateUser(ImpersonationType.WinIdentity, Domain, User, SecurePassword))
+            try
             {
-                done = impersonation.RunImpersonated(() =>
-                  {
-                      //Util.WriteFile(ConfigFullPath, json, FileOptions.Encrypted); //Does Not Work When Impersonating here. it seems need some time and new impersonation to encrypt.
-                      Util.WriteFile(ConfigFullPath, json, FileOptions.WriteThrough);
+                using (impersonate = new ImpersonateUser(ImpersonationType.WinIdentity, Domain, User, SecurePassword))
+                {
+                    done = impersonate.RunImpersonated(() =>
+                      {
+                          //Util.WriteFile(ConfigFullPath, json, FileOptions.Encrypted); //Does Not Work When Impersonating here. it seems need some time and new impersonation to encrypt.
+                          Util.WriteFile(ConfigFullPath, json, FileOptions.WriteThrough);
 
-                      SecurityUtil.ClearFileAccessRule(ConfigFullPath);
+                          SecurityUtil.ClearFileAccessRule(ConfigFullPath);
 
-                      SecurityUtil.AllowFileAccessRule(ConfigFullPath, FullAccountName, FileSystemRights.FullControl);
-                      SecurityUtil.AllowFileAccessRule(ConfigFullPath, WellKnownSidType.BuiltinUsersSid, FileSystemRights.ReadPermissions);
-                  });
+                          SecurityUtil.AllowFileAccessRule(ConfigFullPath, FullAccountName, FileSystemRights.FullControl);
+                          SecurityUtil.AllowFileAccessRule(ConfigFullPath, WellKnownSidType.BuiltinUsersSid, FileSystemRights.ReadPermissions);
+                      });
+                }
+                UseInitialPassword = done;
+
+                if (!done) throw new Exception("Create Config File Failed! Open an issue on github. MasoudRahmani/LovePath");
             }
-            UseInitialPassword = done;
-
-            if (!done) throw new Exception("Create Config File Failed! Open an issue on github. MasoudRahmani/LovePath");
+            catch (Exception w)
+            {
+                impersonate.Dispose();
+                throw w;
+            }
         }
 
         private bool ReadConfig()
@@ -226,32 +235,43 @@ namespace LovePath
 
             bool done = false;
 
-            using (var impersonate = new ImpersonateUser(ImpersonationType.WinIdentity, Domain, User, SecurePassword))
+            ImpersonateUser impersonate = null;
+            try
             {
-                System.Diagnostics.Debug.WriteLine($"Before Impersonation: {Environment.UserName}");
-                done = impersonate.RunImpersonated(() =>
+                using (impersonate = new ImpersonateUser(ImpersonationType.WinIdentity, Domain, User, SecurePassword))
                 {
                     System.Diagnostics.Debug.WriteLine($"Before Impersonation: {Environment.UserName}");
+                    done = impersonate.RunImpersonated(() =>
+                    {
+                        System.Diagnostics.Debug.WriteLine($"After Impersonation: {Environment.UserName}");
 
-                    if (Util.IsWindowsEncrypted(ConfigFullPath)) File.Decrypt(ConfigFullPath);
+                        //if (Util.IsWindowsEncrypted(ConfigFullPath)) File.Decrypt(ConfigFullPath);
 
-                    var json = File.ReadAllText(ConfigFullPath);
-                    var configFile_data = SerializationUtil.Deserialize<Config>(json);
+                        var json = File.ReadAllText(ConfigFullPath);
+                        var configFile_data = SerializationUtil.Deserialize<Config>(json);
 
-                    //If config file user access equals User in config file, We have password.
-                    if (configFile_data.User == this.User && configFile_data.Domain == this.Domain)
-                        UseInitialPassword = true;
+                        //If config file user access equals User in config file, We have password.
+                        if (configFile_data.User == this.User && configFile_data.Domain == this.Domain)
+                            UseInitialPassword = true;
 
-                    Domain = configFile_data.Domain;
-                    User = configFile_data.User;
+                        Domain = configFile_data.Domain;
+                        User = configFile_data.User;
 
-                    XplorerName = configFile_data.XplorerName;
-                    LovePath = configFile_data.LovePath;
-                });
+                        XplorerName = configFile_data.XplorerName;
+                        LovePath = configFile_data.LovePath;
+                        //if (!Util.IsWindowsEncrypted(ConfigFullPath)) File.Decrypt(ConfigFullPath);
+                    });
+                }
+                if (!done) UseInitialPassword = false;
+                return done;
             }
-            if (!done) UseInitialPassword = false;
+            catch (Exception w)
+            {
+                Console.WriteLine(w.Message);
+                impersonate.Dispose();
+                return false;
+            }
 
-            return done;
         }
 
         private void GetExplorerName()
