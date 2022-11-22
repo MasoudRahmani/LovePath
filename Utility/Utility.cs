@@ -57,7 +57,11 @@ namespace LovePath.Utility
                 File.ReadAllText(path);
             }
         }
-
+        public static bool IsWindowsEncrypted(string filepath)
+        {
+            FileInfo fi = new FileInfo(filepath); //uri is the full path and file name
+            return fi.Attributes.HasFlag(FileAttributes.Encrypted);
+        }
 
         public static void ShowExit(string msg = "")
         {
