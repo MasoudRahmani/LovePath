@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Management;
+using System.Security;
 using System.Security.AccessControl;
 using System.Security.Principal;
 
@@ -163,6 +164,13 @@ namespace LovePath.Utility
                 }
             }
             return validUsers;
+        }
+
+        public static bool ValidateAccountCredential(string username, SecureString password, string domain)
+        {
+            bool valid = false;
+            valid = new Impersonation.ImpersonateUser(ImpersonationType.Win32, domain, username, password).RunImpersonated(() => { });
+            return valid;
         }
 
     }
