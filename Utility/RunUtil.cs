@@ -13,13 +13,14 @@ namespace LovePath
             {
                 try
                 {
+                    bool result;
                     ProcessStartInfo startInfo = new ProcessStartInfo
                     {
                         FileName = filename,
                         //WindowStyle = ProcessWindowStyle.Hidden,
-                        //CreateNoWindow = true,
+                        //CreateNoWindow = false,
                         Arguments = $"\"{arg.Replace(@"\\", @"\")}\"",
-                        RedirectStandardOutput = true,
+                        //RedirectStandardOutput = true,
                         //RedirectStandardError = true,
                         UseShellExecute = false,
                         UserName = user_noDomain,
@@ -28,13 +29,14 @@ namespace LovePath
 
                     };
                     cmd.StartInfo = startInfo;
-                    return cmd.Start();
+                    result = cmd.Start();
 
                     //cmd.WaitForExit();
+                    return result;
                 }
-                catch (Exception w)
+                catch (Exception err)
                 {
-                    throw w;
+                    throw err;
                 }
             }
         }
