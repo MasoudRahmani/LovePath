@@ -281,7 +281,7 @@ namespace LovePath
             int choice = 0;
 
             bool idiot = true;
-            while (idiot)
+            while (idiot & validUsers.Count > 1)
             {
                 Console.Write($"Choose User [0-{validUsers.Count - 1}]: ");
                 var input = Console.ReadLine();
@@ -294,7 +294,7 @@ namespace LovePath
             Domain = cFullAccount[0];
             User = cFullAccount[1];
 
-            GetPassword(validUsers[0]);
+            GetPassword(validUsers[choice]);
         }
 
         private void GetExplorerName()
