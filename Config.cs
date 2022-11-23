@@ -196,19 +196,22 @@ namespace LovePath
 
         private void CreateConfig()
         {
-            var json = SerializationUtil.Serialize(this);
-
             bool done = false;
             ImpersonateUser impersonate = null;
 
             try
             {
+                /* SOLVES Read/Write Encryption Problem */
+                _ = RunUtil.RunasProcess_API("cmd.exe", "/c", User, SecurePassword);
+                /* SOLVES Read/Write Encryption Problem */
+
+                var json = SerializationUtil.Serialize(this);
                 using (impersonate = new ImpersonateUser(ImpersonationType.WinIdentity, Domain, User, SecurePassword))
                 {
                     done = impersonate.RunImpersonated(() =>
                      {
-                         //Util.WriteFile(ConfigFullPath, json, FileOptions.Encrypted); //Does Not Work When Impersonating here. it seems need some time and new impersonation to encrypt.
-                         Util.WriteFile(ConfigFullPath, json, FileOptions.WriteThrough);
+                         Util.WriteFile(ConfigFullPath, json, FileOptions.Encrypted); //Does Not Work If i do not use runasProcess_api
+
                          SecurityUtil.ClearFileAccessRule(ConfigFullPath);
 
                          SecurityUtil.AllowFileAccessRule(ConfigFullPath, FullAccountName, FileSystemRights.FullControl);
@@ -229,18 +232,19 @@ namespace LovePath
         private bool ReadConfig()
         {
             bool done = false;
-            
             ImpersonateUser impersonate = null;
             try
             {
+                /* SOLVES Read/Write Encryption Problem */
+                _ = RunUtil.RunasProcess_API("cmd.exe", "/c", User, SecurePassword);
+                /* SOLVES Read/Write Encryption Problem */
+
                 using (impersonate = new ImpersonateUser(ImpersonationType.WinIdentity, Domain, User, SecurePassword))
                 {
                     System.Diagnostics.Debug.WriteLine($"Before Impersonation: {Environment.UserName}");
                     done = impersonate.RunImpersonated(() =>
                     {
                         System.Diagnostics.Debug.WriteLine($"After Impersonation: {Environment.UserName}");
-
-                        //if (Util.IsWindowsEncrypted(ConfigFullPath)) File.Decrypt(ConfigFullPath);
 
                         var json = File.ReadAllText(ConfigFullPath);
                         var configFile_data = SerializationUtil.Deserialize<Config>(json);
@@ -254,7 +258,6 @@ namespace LovePath
 
                         XplorerName = configFile_data.XplorerName;
                         LovePath = configFile_data.LovePath;
-                        //if (!Util.IsWindowsEncrypted(ConfigFullPath)) File.Encrypt(ConfigFullPath);
                     });
                 }
                 if (!done) UseInitialPassword = false;
@@ -266,7 +269,6 @@ namespace LovePath
                 if (impersonate != null) impersonate.Dispose();
                 return false;
             }
-
         }
 
         private void GetConfigFileInfo()
