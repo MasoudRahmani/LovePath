@@ -17,7 +17,7 @@ namespace LovePath
         {
             try
             {
-                // Wait x seconds – if a instance of the program is shutting down.
+                //Wait x seconds – if a instance of the program is shutting down.
                 if (!mutex.WaitOne(TimeSpan.FromSeconds(1), false))
                 {
                     Console.WriteLine("Another instance of the app is running. Bye!\n Press a key to exit...");
@@ -47,14 +47,6 @@ namespace LovePath
             cnf.Initiate();
 
             Start(cnf);
-
-            var imp = new Impersonation.ImpersonateUser(ImpersonationType.Win32, cnf.Domain, cnf.User, cnf.SecurePassword);
-            imp.RunImpersonatedValidUser(() =>
-            {
-                if (Util.IsWindowsEncrypted(cnf.ConfigFullPath)) ;
-                else
-                    ;//File.Encrypt(cnf.ConfigFullPath);
-            });
         }
 
         private static void Start(Config cnf)
