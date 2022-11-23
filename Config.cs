@@ -24,7 +24,7 @@ namespace LovePath
         private string _user = Environment.UserName;
         private string _xplorerName = "XY.exe";
         private string _configFileName = "LoveConfig.json";
-        private string _lovePath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+        private string _lovePath = Environment.CurrentDirectory;
         private List<ConsoleKey> _secret;
         #endregion
 
@@ -134,7 +134,6 @@ namespace LovePath
         /// </summary>
         public void Initiate()
         {
-            bool result = true;
             if (!File.Exists(ConfigFullPath))
             {
                 GetAccountInfo();
@@ -144,14 +143,19 @@ namespace LovePath
                 CreateConfig();
             }
             else
-                result = ReadConfig();
-
-            if (!result)
             {
-                Console.WriteLine("Reading Config Failed!! Continue with uncertain config? (Y/N): ");
-                if (Console.ReadKey().Key == ConsoleKey.Y)
-                { Console.WriteLine(); return; }
-                else Util.ShowExit("Done.");
+                GetConfigFileInfo();
+                bool result = ReadConfig();
+                if (!result)
+                {
+                    Console.WriteLine("Reading Config Failed!! Continue with uncertain config? (Y/N): ");
+                    if (Console.ReadKey().Key == ConsoleKey.Y)
+                    {
+                        Console.WriteLine();
+                        return;
+                    }
+                    else Util.ShowExit("Done.");
+                }
             }
         }
 
@@ -202,15 +206,14 @@ namespace LovePath
                 using (impersonate = new ImpersonateUser(ImpersonationType.WinIdentity, Domain, User, SecurePassword))
                 {
                     done = impersonate.RunImpersonated(() =>
-                      {
-                          //Util.WriteFile(ConfigFullPath, json, FileOptions.Encrypted); //Does Not Work When Impersonating here. it seems need some time and new impersonation to encrypt.
-                          Util.WriteFile(ConfigFullPath, json, FileOptions.WriteThrough);
+                     {
+                         //Util.WriteFile(ConfigFullPath, json, FileOptions.Encrypted); //Does Not Work When Impersonating here. it seems need some time and new impersonation to encrypt.
+                         Util.WriteFile(ConfigFullPath, json, FileOptions.WriteThrough);
+                         SecurityUtil.ClearFileAccessRule(ConfigFullPath);
 
-                          SecurityUtil.ClearFileAccessRule(ConfigFullPath);
-
-                          SecurityUtil.AllowFileAccessRule(ConfigFullPath, FullAccountName, FileSystemRights.FullControl);
-                          SecurityUtil.AllowFileAccessRule(ConfigFullPath, WellKnownSidType.BuiltinUsersSid, FileSystemRights.ReadPermissions);
-                      });
+                         SecurityUtil.AllowFileAccessRule(ConfigFullPath, FullAccountName, FileSystemRights.FullControl);
+                         SecurityUtil.AllowFileAccessRule(ConfigFullPath, WellKnownSidType.BuiltinUsersSid, FileSystemRights.ReadPermissions);
+                     });
                 }
                 UseInitialPassword = done;
 
@@ -218,23 +221,15 @@ namespace LovePath
             }
             catch (Exception w)
             {
-                impersonate.Dispose();
+                if (impersonate != null) impersonate.Dispose();
                 throw w;
             }
         }
 
         private bool ReadConfig()
         {
-            List<string> validUsers = SecurityUtil.GetUsersWithAccessOnFile(ConfigFullPath);
-
-            var cFullAccount = validUsers[0].Split('\\');
-            Domain = cFullAccount[0];
-            User = cFullAccount[1];
-
-            GetPassword(validUsers[0]);
-
             bool done = false;
-
+            
             ImpersonateUser impersonate = null;
             try
             {
@@ -259,7 +254,7 @@ namespace LovePath
 
                         XplorerName = configFile_data.XplorerName;
                         LovePath = configFile_data.LovePath;
-                        //if (!Util.IsWindowsEncrypted(ConfigFullPath)) File.Decrypt(ConfigFullPath);
+                        //if (!Util.IsWindowsEncrypted(ConfigFullPath)) File.Encrypt(ConfigFullPath);
                     });
                 }
                 if (!done) UseInitialPassword = false;
@@ -268,10 +263,21 @@ namespace LovePath
             catch (Exception w)
             {
                 Console.WriteLine(w.Message);
-                impersonate.Dispose();
+                if (impersonate != null) impersonate.Dispose();
                 return false;
             }
 
+        }
+
+        private void GetConfigFileInfo()
+        {
+            List<string> validUsers = SecurityUtil.GetUsersWithAccessOnFile(ConfigFullPath);
+
+            var cFullAccount = validUsers[0].Split('\\');
+            Domain = cFullAccount[0];
+            User = cFullAccount[1];
+
+            GetPassword(validUsers[0]);
         }
 
         private void GetExplorerName()
@@ -292,6 +298,7 @@ namespace LovePath
         {
             Console.Write("\nLovePath:");
             _lovePath = @Console.ReadLine();
+            if (_lovePath == ".") _lovePath = Environment.CurrentDirectory;
 
             while (!Directory.Exists(@_lovePath))
             {
