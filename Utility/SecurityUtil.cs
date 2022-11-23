@@ -139,7 +139,16 @@ namespace LovePath.Utility
             var humanUsers = SecurityUtil.GetHumanUsers();
             foreach (FileSystemAccessRule rule in rules)
             {
-                var found = humanUsers.Find(x => x.Contains(rule.IdentityReference.Value.Split('\\')[1]));
+                string found;
+                var splited = rule.IdentityReference.Value.Split('\\');
+                
+                //with domain
+                if (splited.Length > 1)
+                    found = humanUsers.Find(x => x.Contains(splited[1]));
+                //without domain
+                else
+                    found = humanUsers.Find(x => x.Contains(splited[0]));//without
+
                 if (!string.IsNullOrWhiteSpace(found))
                 {
                     if (FileSystemRights.FullControl == rule.FileSystemRights)

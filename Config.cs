@@ -274,8 +274,23 @@ namespace LovePath
         private void GetConfigFileInfo()
         {
             List<string> validUsers = SecurityUtil.GetUsersWithAccessOnFile(ConfigFullPath);
+            //TODO: ask for which one
 
-            var cFullAccount = validUsers[0].Split('\\');
+            for (int i = 0; i < validUsers.Count; i++)
+                Console.WriteLine($"{i}. {validUsers[i]}");
+            int choice = 0;
+
+            bool idiot = true;
+            while (idiot)
+            {
+                Console.Write($"Choose User [0-{validUsers.Count - 1}]: ");
+                var input = Console.ReadLine();
+
+                idiot = !int.TryParse(input, out choice);
+                if (idiot) Console.WriteLine("Wrong, Again: ");
+            }
+
+            var cFullAccount = validUsers[choice].Split('\\');
             Domain = cFullAccount[0];
             User = cFullAccount[1];
 
