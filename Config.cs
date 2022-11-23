@@ -20,7 +20,7 @@ namespace LovePath
 
         /*-----------------        Used In Property             --------------- */
         private string _programPath = AppDomain.CurrentDomain.BaseDirectory;
-        private string _domainName = Environment.UserDomainName;
+        private string _domain = Environment.UserDomainName;
         private string _user = Environment.UserName;
         private string _xplorerName = "XY.exe";
         private string _configFileName = "LoveConfig.json";
@@ -33,7 +33,16 @@ namespace LovePath
         [DataMember] //If Config file was moved, this is here to check config file and find last path
         public string ProgramPath { get { return _programPath; } private set { _programPath = value; } }
         [DataMember]
-        public string Domain { get { return _domainName; } private set { _domainName = value; } }
+        public string Domain
+        {
+            get { return _domain; }
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value)) throw new ArgumentException();
+                else
+                    _domain = value;
+            }
+        }
         [DataMember]
         public string User
         {
@@ -45,7 +54,7 @@ namespace LovePath
             }
         }
         [DataMember]
-        public string FullAccountName { get { return $"{_domainName}\\{_user}"; } private set {; } } // from User
+        public string FullAccountName { get { return $"{_domain}\\{_user}"; } private set {; } } // from User
         [DataMember]
         public string XplorerName
         {
@@ -148,7 +157,7 @@ namespace LovePath
                 bool result = ReadConfig();
                 if (!result)
                 {
-                    Console.WriteLine("Reading Config Failed!! Continue with uncertain config? (Y/N): ");
+                    Console.Write("Reading Config Failed!! Continue with uncertain config? (Y/N): ");
                     if (Console.ReadKey().Key == ConsoleKey.Y)
                     {
                         Console.WriteLine();
@@ -274,7 +283,6 @@ namespace LovePath
         private void GetConfigFileInfo()
         {
             List<string> validUsers = SecurityUtil.GetUsersWithAccessOnFile(ConfigFullPath);
-            //TODO: ask for which one
 
             for (int i = 0; i < validUsers.Count; i++)
                 Console.WriteLine($"{i}. {validUsers[i]}");
@@ -300,7 +308,7 @@ namespace LovePath
         private void GetExplorerName()
         {
             Console.Write(
-                "\n\tPut <Explorer> in Application Directory" +
+                "\n---- Put <Explorer> in Application Directory ----" +
                 "\nExplorer Name:");
             XplorerName = @Console.ReadLine();
 

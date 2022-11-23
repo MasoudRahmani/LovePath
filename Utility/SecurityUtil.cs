@@ -141,7 +141,7 @@ namespace LovePath.Utility
             {
                 string found;
                 var splited = rule.IdentityReference.Value.Split('\\');
-                
+
                 //with domain
                 if (splited.Length > 1)
                     found = humanUsers.Find(x => x.Contains(splited[1]));
@@ -151,7 +151,7 @@ namespace LovePath.Utility
 
                 if (!string.IsNullOrWhiteSpace(found))
                 {
-                    if (FileSystemRights.FullControl == rule.FileSystemRights)
+                    if (FileSystemRights.FullControl == rule.FileSystemRights || FileSystemRights.Modify == rule.FileSystemRights)
                         validUsers.Add(rule.IdentityReference.Value);
                 }
             }

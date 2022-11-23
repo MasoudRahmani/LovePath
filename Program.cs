@@ -58,8 +58,7 @@ namespace LovePath
 
             if (cnf.UseInitialPassword == false)
             {
-                //ShowLovePathPossibleUsers(cnf.LovePath);
-                cnf.GetPassword(cnf.User);
+                TryToGetLovePathAccessCredential(cnf);
             }
 
             try
@@ -80,37 +79,45 @@ namespace LovePath
             }
         }
 
-        private static void ShowLovePathPossibleUsers(string LovePath)
+        private static void TryToGetLovePathAccessCredential(Config config)
         {
             try
             {
-                List<string> authorizedUsers = SecurityUtil.GetUsersWithAccessOnFile(LovePath);
+                List<string> authorizedUsers = SecurityUtil.GetUsersWithAccessOnFile(config.LovePath);
 
                 if (authorizedUsers.Count == 0)
                 {
-                    Console.WriteLine("No human account on path.");
-                }
-                else if (authorizedUsers.Count == 1)
-                {
-                    Console.WriteLine($"Possible Valid User: {authorizedUsers[0]}");
+                    Console.WriteLine("\n\tNo human account with Access on path.\n");
+                    config.GetPassword(" ? ? ? ");
                 }
                 else
-                    Console.WriteLine(
-                        $"Path NOT valid OR Changed Permission.\n" +
-                        $"Possible Users:\n" +
-                        $"\t{string.Join("\n\t", authorizedUsers) }"
-                        );
+                {
+                    for (int i = 0; i < authorizedUsers.Count; i++)
+                        Console.WriteLine($"{i}. {authorizedUsers[i]}");
+                    int choice = 0;
+
+                    bool idiot = true;
+                    while (idiot & authorizedUsers.Count > 1)
+                    {
+                        Console.Write($"Choose User [0-{authorizedUsers.Count - 1}]: ");
+                        var input = Console.ReadLine();
+
+                        idiot = !int.TryParse(input, out choice);
+                        if (idiot) Console.WriteLine("Wrong, Again: ");
+                    }
+
+                    var cFullAccount = authorizedUsers[choice].Split('\\');
+                    config.Domain = cFullAccount[0];
+                    config.User = cFullAccount[1];
+
+                    config.GetPassword(authorizedUsers[choice]);
+                }
             }
             catch (Exception w)
             {
-                Console.WriteLine(
-                    "Common: File/Folder has no readable access. Good!\n" +
-                    "\n--- Error:" + w.Message);
+                Console.WriteLine(w.Message);
+                config.GetPassword(" ? ? ? ");
             }
-
-            //TODO:
-            //Console.WriteLine("Change User");
-            //get user
         }
 
         private static void SetConsoleSettings()
