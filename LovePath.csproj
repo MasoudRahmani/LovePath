@@ -12,6 +12,7 @@
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
     <IsWebBootstrapper>false</IsWebBootstrapper>
+    <TargetFrameworkProfile />
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -26,7 +27,6 @@
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -87,9 +87,32 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resource\App.config" />
+    <None Include="Tools\XY\App\AppInfo\appinfo.ini" />
+    <None Include="Tools\XY\App\AppInfo\Launcher\XY.ini" />
+    <None Include="Tools\XY\App\DefaultData\Data\XYplorer.ini" />
+    <None Include="Tools\XY\App\DefaultData\Startup.ini" />
+    <None Include="Tools\XY\App\XYplorer\CatalogDefault.dat" />
   </ItemGroup>
   <ItemGroup>
+    <AdditionalFiles Include="Tools\PlusPlus\config.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\PlusPlus\Explorer++.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </AdditionalFiles>
     <Content Include="Resource\I´s Pure 2.ico" />
+    <Content Include="Tools\XY\App\AppInfo\appicon.ico" />
+    <Content Include="Tools\XY\App\AppInfo\appicon_128.png" />
+    <Content Include="Tools\XY\App\AppInfo\appicon_16.png" />
+    <Content Include="Tools\XY\App\AppInfo\appicon_32.png" />
+    <Content Include="Tools\XY\App\XYplorer\XY64.exe" />
+    <Content Include="Tools\XY\App\XYplorer\XY64contents.exe" />
+    <Content Include="Tools\XY\App\XYplorer\XY64ctxmenu.exe" />
+    <Content Include="Tools\XY\App\XYplorer\XYcopy.exe" />
+    <Content Include="Tools\XY\App\XYplorer\XYplorer.exe" />
+    <Content Include="Tools\XY\XY.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
@@ -98,9 +121,11 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>xcopy /Y /E "$(ProjectDir)XY\" "$(TargetDir)"</PostBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
     <PreBuildEvent>del /F /Q /S "$(TargetDir)*"
