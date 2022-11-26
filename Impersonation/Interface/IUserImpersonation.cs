@@ -8,7 +8,7 @@ namespace LovePath.Interface
 
 
         bool ImpersonateValidUser();
-        
+
         bool RunImpersonated(Action action);
         void Dispose();
     }

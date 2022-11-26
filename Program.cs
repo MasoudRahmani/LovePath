@@ -1,8 +1,8 @@
-﻿using System;
-using LovePath.Utility;
-using System.Threading;
+﻿using LovePath.Utility;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 
 //bug of saving config and reading config ( with encryption enabled )
 

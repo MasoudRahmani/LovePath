@@ -1,4 +1,5 @@
-﻿using LovePath.Utility;
+﻿using LovePath.Impersonation;
+using LovePath.Utility;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -6,7 +7,6 @@ using System.Runtime.Serialization;
 using System.Security;
 using System.Security.AccessControl;
 using System.Security.Principal;
-using LovePath.Impersonation;
 
 namespace LovePath
 {
