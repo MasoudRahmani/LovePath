@@ -87,32 +87,60 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resource\App.config" />
-    <None Include="Tools\XY\App\AppInfo\appinfo.ini" />
-    <None Include="Tools\XY\App\AppInfo\Launcher\XY.ini" />
-    <None Include="Tools\XY\App\DefaultData\Data\XYplorer.ini" />
-    <None Include="Tools\XY\App\DefaultData\Startup.ini" />
-    <None Include="Tools\XY\App\XYplorer\CatalogDefault.dat" />
+    <None Include="Tools\XY\App\AppInfo\appinfo.ini">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Tools\XY\App\AppInfo\Launcher\XY.ini">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Tools\XY\App\DefaultData\Data\XYplorer.ini">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Tools\XY\App\DefaultData\Startup.ini">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Tools\XY\App\XYplorer\CatalogDefault.dat">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
-    <AdditionalFiles Include="Tools\PlusPlus\config.xml">
+    <None Include="Tools\PlusPlus\config.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </AdditionalFiles>
-    <AdditionalFiles Include="Tools\PlusPlus\Explorer++.exe">
+    </None>
+    <None Include="Tools\PlusPlus\Explorer++.exe">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </AdditionalFiles>
+    </None>
     <Content Include="Resource\I´s Pure 2.ico" />
-    <Content Include="Tools\XY\App\AppInfo\appicon.ico" />
-    <Content Include="Tools\XY\App\AppInfo\appicon_128.png" />
-    <Content Include="Tools\XY\App\AppInfo\appicon_16.png" />
-    <Content Include="Tools\XY\App\AppInfo\appicon_32.png" />
-    <Content Include="Tools\XY\App\XYplorer\XY64.exe" />
-    <Content Include="Tools\XY\App\XYplorer\XY64contents.exe" />
-    <Content Include="Tools\XY\App\XYplorer\XY64ctxmenu.exe" />
-    <Content Include="Tools\XY\App\XYplorer\XYcopy.exe" />
-    <Content Include="Tools\XY\App\XYplorer\XYplorer.exe" />
-    <Content Include="Tools\XY\XY.exe">
+    <Content Include="Tools\XY\App\AppInfo\appicon.ico">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Tools\XY\App\AppInfo\appicon_128.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Tools\XY\App\AppInfo\appicon_16.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Tools\XY\App\AppInfo\appicon_32.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Tools\XY\App\XYplorer\XY64.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Tools\XY\App\XYplorer\XY64contents.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Tools\XY\App\XYplorer\XY64ctxmenu.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Tools\XY\App\XYplorer\XYcopy.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Tools\XY\App\XYplorer\XYplorer.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <None Include="Tools\XY\XY.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
