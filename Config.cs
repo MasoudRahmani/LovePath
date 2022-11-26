@@ -22,10 +22,10 @@ namespace LovePath
         private string _programPath = AppDomain.CurrentDomain.BaseDirectory;
         private string _domain = Environment.UserDomainName;
         private string _user = Environment.UserName;
-        private string _xplorerName = "XY.exe";
-        private string _configFileName = "LoveConfig.json";
+        private string _xplorerFullPath = Properties.Resources.XPL_PlusPlus;
+        private string _configFileName = Properties.Resources.ConfigName;
         private string _lovePath = Environment.CurrentDirectory;
-        private List<ConsoleKey> _secret;
+        private List<ConsoleKey> _secret = new List<ConsoleKey>();
         #endregion
 
         #region Property
@@ -56,19 +56,16 @@ namespace LovePath
         [DataMember]
         public string FullAccountName { get { return $"{_domain}\\{_user}"; } private set {; } } // from User
         [DataMember]
-        public string XplorerName
+        public string ExplorerFullPath
         {
-            get => _xplorerName;
+            get => _xplorerFullPath;
             set
             {
                 if (string.IsNullOrEmpty(value)) throw new ArgumentNullException();
-                if (value == ".") _xplorerName = "Explorer++.exe";
                 else
-                    _xplorerName = value;
+                    _xplorerFullPath = value;
             }
         }
-        [DataMember]
-        public string ExplorerFullPath { get { return Path.Combine(_programPath, _xplorerName); } private set {; } }
         [DataMember]
         public string LovePath
         {
@@ -85,21 +82,18 @@ namespace LovePath
         {
             get
             {
-                if (_secret == null)
+                //No Secret
+                if (string.IsNullOrWhiteSpace(Properties.Resources.Secret))
+                    return _secret;
+                //We have Secret - Not Initialized
+                else if (_secret.Count == 0)
                 {
-                    _secret = new List<ConsoleKey>();
-                    _secret.Add(ConsoleKey.F1);
-                    _secret.Add(ConsoleKey.Escape);
+                    foreach (var secret in Properties.Resources.Secret.Split(','))
+                        _secret.Add((ConsoleKey)int.Parse(secret));
                 }
                 return _secret;
             }
-            set
-            {
-                if (value == null)
-                    _secret = new List<ConsoleKey>();
-                else
-                    _secret = value;
-            }
+            private set => _secret = value;
         }
 
         //------------------------------
@@ -136,6 +130,7 @@ namespace LovePath
                 if (key == SecretEntrance[i]) i++;
                 else i = 0;
             }
+            Console.Clear();
         }
 
         /// <summary>
@@ -147,7 +142,7 @@ namespace LovePath
             {
                 GetAccountInfo();
                 GetLovePath();
-                GetExplorerName();
+                GetExplorerPath();
 
                 CreateConfig();
             }
@@ -265,7 +260,7 @@ namespace LovePath
                         Domain = configFile_data.Domain;
                         User = configFile_data.User;
 
-                        XplorerName = configFile_data.XplorerName;
+                        ExplorerFullPath = configFile_data.ExplorerFullPath;
                         LovePath = configFile_data.LovePath;
                     });
                 }
@@ -305,17 +300,34 @@ namespace LovePath
             GetPassword(validUsers[choice]);
         }
 
-        private void GetExplorerName()
+        private void GetExplorerPath()
         {
+            Console.SetWindowSize(75, 25);
+            Console.SetBufferSize(75, 25);//no scrollbar
+
+            Console.Clear();
+
+
             Console.Write(
-                "\n---- Put <Explorer> in Application Directory ----" +
-                "\nExplorer Name:");
-            XplorerName = @Console.ReadLine();
+                "    ***    If You have Tools Folder Installed beside Main Program      ***\n" +
+                "    ***                                                                ***\n" +
+                "    ***                Shortcut for Explorer Path:                     ***\n" +
+                "    ***                                                                ***\n" +
+                "    +++                    [1]        Explorer++                       ***\n" +
+                "    +++                    [2]        XY.EXE                           ***\n" +
+                "    ***                                                                ***\n" +
+                "    ***     Otherwise please Give a Explorer Application Full Path     ***\n" +
+                "    ***                                                                ***\n" +
+                "    Explorer Path: ");
+            ExplorerFullPath = @Console.ReadLine();
+
+            if (ExplorerFullPath == "1") _xplorerFullPath = Properties.Resources.XPL_PlusPlus;
+            if (ExplorerFullPath == "2") _xplorerFullPath = Properties.Resources.XPL_XY;
 
             while (!File.Exists(ExplorerFullPath))
             {
-                Console.Write("\nWrong name!, Agian: ");
-                XplorerName = @Console.ReadLine();
+                Console.Write("\nWrong path!, Agian: ");
+                ExplorerFullPath = @Console.ReadLine();
             }
         }
 

@@ -75,6 +75,11 @@
     <Compile Include="Config.cs" />
     <Compile Include="Impersonation\Types\Win32Type.cs" />
     <Compile Include="Impersonation\Types\WinIdentityType.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Utility\ConsoleUtil.cs" />
     <Compile Include="Impersonation\Interface\IUserImpersonation.cs" />
     <Compile Include="Utility\SerializationUtil.cs" />
@@ -149,7 +154,12 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>
