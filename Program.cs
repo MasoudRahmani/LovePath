@@ -37,7 +37,6 @@ namespace LovePath
                 mutex.ReleaseMutex();
             }
         }
-
         public static void OpenSasemi()
         {
             var cnf = new Config();
@@ -123,14 +122,14 @@ namespace LovePath
         private static void SetConsoleSettings()
         {
             ConsoleUtil.CenterConsole();
+            ConsoleUtil.CenterConsole();
 
             Console.Title = "LovePath";
             Console.BackgroundColor = ConsoleColor.Red;
-            Console.SetWindowSize(70, 10);
-            Console.SetBufferSize(70, 10);//no scrollbar
+            Console.SetWindowSize(70, 19);
+            Console.SetBufferSize(70, 19);//no scrollbar
 
             Console.Clear();
         }
-
     }
 }
