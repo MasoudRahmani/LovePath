@@ -166,7 +166,15 @@
     </PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PreBuildEvent>del /F /Q /S "$(TargetDir)*"
-rmdir /Q /S "$(TargetDir)Data"</PreBuildEvent>
+    <PreBuildEvent>
+if $(ConfigurationName) == Debug (
+if exist "$(TargetDir)Tools\XY\Data\" (
+
+del /F /Q /S "$(TargetDir)Tools\*"
+rmdir /Q /S "$(TargetDir)Tools\XY\Data"
+)
+) 
+
+</PreBuildEvent>
   </PropertyGroup>
 </Project>
