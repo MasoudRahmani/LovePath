@@ -228,7 +228,6 @@ namespace LovePath
             }
             catch (Exception w)
             {
-                if (impersonate != null) impersonate.Dispose();
                 throw w;
             }
         }
@@ -270,7 +269,6 @@ namespace LovePath
             catch (Exception w)
             {
                 Console.WriteLine(w.Message);
-                if (impersonate != null) impersonate.Dispose();
                 return false;
             }
         }
