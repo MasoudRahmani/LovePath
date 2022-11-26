@@ -3,8 +3,8 @@
 
 https://github.com/MasoudRahmani/LovePath/tree/master/LovePath_Releases
 
-Magic Key to use app is `F1 + ESC`. 😈😜
-Change in source code if needed and build.
+Magic Key to use app is `F1 + ESC + .`. 😈😜
+Change in source code resource if needed and build.
 
 ------------
 
@@ -75,9 +75,9 @@ Program
 
 **Easiest way to invoke to open that Folder is:** in a bat or cmd (not obscure enough)
 
-    runas /user:Hidden "XYplorerPortable.exe e:\Temp\"
+    runas /user:Hidden "Explorer++.exe e:\Temp\"
 
-    psexec -user Administrator -p Passwd "xcopy a.xml \\server_over_there\c$\A.xml"
+    psexec -user Administrator -p Passwd "Explorer++.exe e:\Temp\"
 
 But i wanted to hide it even further so i made an app which would deceive a user, right now it is just an idea but this way
         with **Obfuscation** they can't even guess what this app does, let alone ask for any guidance.
@@ -95,15 +95,15 @@ Right now main problem is how to use any explorer(for convenience) to open folde
 Windows explorer is limited and on some OS version is not possible therefore i am using third-party explorer (hopefully for now).
 
 * **Explorer++** is a fast and simple application and great portability but might need some tweak. (problem with one drive)
-* **XYplorer** is very good but its portability is a problem. (need license)
+* **XYplorer** is very good but its portability and license is a problem. (Not inclueded in this repo)
 
 ***Note***
-**In order to use* XYPlorer you need to place you license in XY\APP\DefaultData\Data\XYplorer.ini.*
+**In order to use* XYPlorer you need to place you license in `Tools\XY\APP\DefaultData\Data\XYplorer.ini` and then Build. or you can directly place in release. same path!*
 
     [Register]
     ; THE FOLLOWING THREE LINES CONTAIN YOUR REGISTRATION INFORMATION. PLEASE KEEP THIS PART PRIVATE.
-    Name= some some
-    Code= x-x-x-x
+    Name=
+    Code=
     dc=0
 
 ***Remember there are two impersonation:***
