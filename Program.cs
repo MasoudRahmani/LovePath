@@ -126,9 +126,10 @@ namespace LovePath
 
             Console.Title = "LovePath";
             Console.BackgroundColor = ConsoleColor.Gray;
-            
-            Console.SetBufferSize(67, 20);//no scrollbar
+            Console.ForegroundColor = ConsoleColor.Black;
+
             Console.SetWindowSize(67, 20);
+            Console.SetBufferSize(67, 21);//no scrollbar
 
             Console.Clear();
         }
