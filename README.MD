@@ -1,4 +1,10 @@
 
+Depricated 
+-------------------
+
+use **Rohos Disk Encryption**
+
+
 **Releases** are here or build yourself:
 
 https://github.com/MasoudRahmani/LovePath/tree/master/LovePath_Releases
